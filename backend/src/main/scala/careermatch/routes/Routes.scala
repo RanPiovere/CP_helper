@@ -64,8 +64,15 @@ object Routes:
 
   // Статика фронтенда
   val staticFiles: Route =
-    getFromDirectory("frontend/dist") ~           // отдаёт все файлы из dist
-    pathSingleSlash(getFromFile("frontend/dist/index.html")) // index.html на /
+    pathSingleSlash(getFromFile("frontend/dist/index.html")) ~ // index.html на /
+    getFromDirectory("frontend/dist") ~                        // остальные статические файлы (assets и т.п.)
+    // SPA fallback: любые другие GET‑пути (например /login, /tests) отдаем index.html,
+    // чтобы роутер на фронтенде обработал маршрут и не отдавался 404
+    get {
+      path(Remaining) { _ =>
+        getFromFile("frontend/dist/index.html")
+      }
+    }
 
   // Основной маршрут с API и фронтендом
   val routes: Route = apiRoutes ~ staticFiles
