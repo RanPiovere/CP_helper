@@ -11,7 +11,8 @@ export default function HomePage() {
     { to: '/', label: 'Главная' },
     { to: '/news', label: 'Новости' },
     { to: '/tests', label: 'Тесты' },
-    ...(isAdmin ? [{ to: '/admin', label: 'Админ-панель' }] : [])
+    ...(user ? [{ to: '/account', label: 'Личный кабинет' }] : []),
+    ...(isViewingAsAdmin ? [{ to: '/admin', label: 'Админ-панель' }] : [])
   ]
 
   return (
@@ -59,9 +60,7 @@ export default function HomePage() {
             </Link>
           ))}
         </nav>
-        <div className="px-6 py-4 border-t text-sm text-gray-500">
-          © 2024 CareerMatch
-        </div>
+        <div className="px-6 py-4 border-t text-sm text-gray-500"></div>
       </aside>
 
       {/* Верхняя панель */}

@@ -42,10 +42,10 @@ export default function AdminPage() {
   })
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user && isViewingAsAdmin) {
       loadData()
     }
-  }, [user, isAdmin])
+  }, [user, isViewingAsAdmin])
 
   const loadData = async () => {
     setDataLoading(true)
@@ -192,7 +192,7 @@ export default function AdminPage() {
     return <Navigate to="/login" replace />
   }
 
-  if (!isAdmin) {
+  if (!isViewingAsAdmin) {
     return <Navigate to="/" replace />
   }
 

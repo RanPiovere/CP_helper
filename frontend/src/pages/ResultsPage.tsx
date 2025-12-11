@@ -2,6 +2,7 @@ import { useLocation, Link } from 'react-router-dom'
 import { useState, useMemo, useEffect } from 'react'
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts'
 import { MatchResult, RiasecProfile, PartnerCourse, adminApi } from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 interface LocationState {
   result: MatchResult
@@ -19,6 +20,7 @@ const RIASEC_LABELS: Record<string, string> = {
 export default function ResultsPage() {
   const location = useLocation()
   const state = location.state as LocationState | null
+  const { user } = useAuth()
   
   const [sortBy, setSortBy] = useState<string>('match')
   const [filterWorkType, setFilterWorkType] = useState<string>('')
@@ -26,6 +28,7 @@ export default function ResultsPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [coursesByProfession, setCoursesByProfession] = useState<Record<number, PartnerCourse[]>>({})
   const [loadingCourses, setLoadingCourses] = useState<number | null>(null)
+  const [favoriteIds, setFavoriteIds] = useState<number[]>([])
 
   const loadCoursesForProfession = async (professionId: number) => {
     if (coursesByProfession[professionId]) return
@@ -46,6 +49,45 @@ export default function ResultsPage() {
       loadCoursesForProfession(expandedId)
     }
   }, [expandedId])
+
+  // Поддержка избранного и статистики тестов через localStorage
+  useEffect(() => {
+    const storedFav = localStorage.getItem('cm_favorite_courses')
+    if (storedFav) {
+      try {
+        const parsed: PartnerCourse[] = JSON.parse(storedFav)
+        setFavoriteIds(parsed.map((c) => c.id))
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (state?.result) {
+      const statsRaw = localStorage.getItem('cm_test_stats')
+      const stats = statsRaw ? JSON.parse(statsRaw) : []
+      stats.push({
+        date: new Date().toISOString(),
+        matchesCount: state.result.matches.length
+      })
+      localStorage.setItem('cm_test_stats', JSON.stringify(stats))
+    }
+  }, [state])
+
+  const toggleFavorite = (course: PartnerCourse) => {
+    const storedRaw = localStorage.getItem('cm_favorite_courses')
+    const stored: PartnerCourse[] = storedRaw ? JSON.parse(storedRaw) : []
+    const exists = stored.find((c) => c.id === course.id)
+    let updated: PartnerCourse[]
+    if (exists) {
+      updated = stored.filter((c) => c.id !== course.id)
+    } else {
+      updated = [...stored, course]
+    }
+    localStorage.setItem('cm_favorite_courses', JSON.stringify(updated))
+    setFavoriteIds(updated.map((c) => c.id))
+  }
 
   if (!state?.result) {
     return (
@@ -252,14 +294,11 @@ export default function ResultsPage() {
                           </span>
                           <div className="mt-3 space-y-3">
                             {coursesByProfession[match.profession.id].map(course => (
-                              <a
+                              <div
                                 key={course.id}
-                                href={course.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all"
+                                className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all"
                               >
-                                <div className="flex items-start justify-between">
+                                <div className="flex items-start justify-between gap-4">
                                   <div>
                                     <h4 className="font-semibold text-blue-800">{course.title}</h4>
                                     <p className="text-sm text-gray-600 mt-1">{course.description}</p>
@@ -267,11 +306,30 @@ export default function ResultsPage() {
                                       {course.provider}
                                     </span>
                                   </div>
-                                  <svg className="w-5 h-5 text-blue-500 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                  </svg>
+                                  <div className="flex flex-col items-end gap-2">
+                                    <a
+                                      href={course.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:underline text-sm"
+                                    >
+                                      Открыть
+                                    </a>
+                                    <button
+                                      onClick={() => toggleFavorite(course)}
+                                      className={`text-sm px-3 py-1 rounded-lg border ${
+                                        favoriteIds.includes(course.id)
+                                          ? 'border-green-200 text-green-700 bg-green-50'
+                                          : 'border-gray-200 text-gray-700 hover:bg-gray-100'
+                                      }`}
+                                      disabled={!user}
+                                      title={user ? '' : 'Войдите, чтобы добавить в избранное'}
+                                    >
+                                      {favoriteIds.includes(course.id) ? 'В избранном' : 'В избранное'}
+                                    </button>
+                                  </div>
                                 </div>
-                              </a>
+                              </div>
                             ))}
                           </div>
                         </div>

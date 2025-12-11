@@ -9,6 +9,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage'
 import AdminPage from './pages/AdminPage'
 import TestsPage from './pages/TestsPage'
 import NewsPage from './pages/NewsPage'
+import AccountPage from './pages/AccountPage'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/tests" element={<TestsPage />} />
             <Route path="/news" element={<NewsPage />} />
+            <Route path="/account" element={<AccountPage />} />
           </Routes>
         </div>
       </Router>
