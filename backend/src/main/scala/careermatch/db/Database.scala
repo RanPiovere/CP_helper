@@ -298,3 +298,112 @@ object Database:
       stmt.close()
       list.toList
     finally conn.close()
+// =======================
+// Professions Seeding
+// =======================
+  def seedProfessions(): Unit =
+    val conn = getConnection()
+    try
+      val stmt = conn.prepareStatement("SELECT COUNT(*) FROM professions")
+      val rs = stmt.executeQuery()
+      rs.next()
+      if rs.getInt(1) == 0 then
+        getSeedProfessions().foreach(p => insertProfession(conn, p))
+      safeClose(rs)
+      stmt.close()
+    finally conn.close()
+
+  private def insertProfession(conn: Connection, p: Profession): Unit =
+    val stmt = conn.prepareStatement("""
+      INSERT INTO professions (name, description, skills, riasec_profile, avg_salary, demand_score, work_type, education_required)
+      VALUES (?, ?, ?, ?::jsonb, ?, ?, ?, ?)
+    """)
+    stmt.setString(1, p.name)
+    stmt.setString(2, p.description)
+    stmt.setArray(3, conn.createArrayOf("text", p.skills.toArray))
+    stmt.setString(4, p.riasecProfile.toJson.compactPrint)
+    stmt.setInt(5, p.avgSalary)
+    stmt.setInt(6, p.demandScore)
+    stmt.setString(7, p.workType)
+    stmt.setString(8, p.educationRequired)
+    stmt.executeUpdate()
+    stmt.close()
+
+  private def getSeedProfessions(): List[Profession] =
+    List(
+      Profession(0, "Программист", "Разработка ПО", List("программирование","git"), RiasecProfile(40,90,30,20,30,50), 150000, 95, "удалённая", "высшее"),
+      Profession(0, "Data Scientist", "Анализ данных", List("Python","SQL"), RiasecProfile(30,95,25,25,35,60), 180000, 90, "удалённая", "высшее")
+      // добавь остальные по аналогии
+    )
+
+  // =======================
+  // Users Management
+  // =======================
+  def createUser(email: String, passwordHash: String, name: String, verificationToken: String): Option[User] =
+    val conn = getConnection()
+    try
+      val role = if isFirstUser()(using conn) then "admin" else "guest"
+      val stmt = conn.prepareStatement("""
+        INSERT INTO users (email, password_hash, name, role, verification_token, verification_expires)
+        VALUES (?, ?, ?, ?, ?, ?)
+        RETURNING id, email, password_hash, name, email_verified, google_id, role, is_viewing_as_guest, created_at
+      """)
+      stmt.setString(1, email.toLowerCase)
+      stmt.setString(2, passwordHash)
+      stmt.setString(3, name)
+      stmt.setString(4, role)
+      stmt.setString(5, verificationToken)
+      stmt.setTimestamp(6, Timestamp.from(Instant.now.plusSeconds(86400)))
+      val rs = stmt.executeQuery()
+      val result = if rs.next() then Some(parseUser(rs)) else None
+      safeClose(rs)
+      stmt.close()
+      result
+    finally conn.close()
+
+  def createGoogleUser(email: String, name: String, googleId: String): Option[User] =
+    val conn = getConnection()
+    try
+      val role = if isFirstUser()(using conn) then "admin" else "guest"
+      val stmt = conn.prepareStatement("""
+        INSERT INTO users (email, name, google_id, role, email_verified)
+        VALUES (?, ?, ?, ?, TRUE)
+        RETURNING id, email, password_hash, name, email_verified, google_id, role, is_viewing_as_guest, created_at
+      """)
+      stmt.setString(1, email.toLowerCase)
+      stmt.setString(2, name)
+      stmt.setString(3, googleId)
+      stmt.setString(4, role)
+      val rs = stmt.executeQuery()
+      val result = if rs.next() then Some(parseUser(rs)) else None
+      safeClose(rs)
+      stmt.close()
+      result
+    finally conn.close()
+
+  def verifyUserEmail(token: String): Boolean =
+    val conn = getConnection()
+    try
+      val stmt = conn.prepareStatement("""
+        UPDATE users SET email_verified = TRUE, verification_token = NULL, verification_expires = NULL
+        WHERE verification_token = ? AND verification_expires > CURRENT_TIMESTAMP
+      """)
+      stmt.setString(1, token)
+      val updated = stmt.executeUpdate()
+      stmt.close()
+      updated > 0
+    finally conn.close()
+
+  // =======================
+  // Custom Tests Management
+  // =======================
+  def toggleTestActive(testId: Int, isActive: Boolean): Boolean =
+    val conn = getConnection()
+    try
+      val stmt = conn.prepareStatement("UPDATE custom_tests SET is_active = ? WHERE id = ?")
+      stmt.setBoolean(1, isActive)
+      stmt.setInt(2, testId)
+      val updated = stmt.executeUpdate()
+      stmt.close()
+      updated > 0
+    finally conn.close()
