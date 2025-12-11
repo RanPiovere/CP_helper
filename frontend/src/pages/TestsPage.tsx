@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { adminApi, CustomTest, TestWithQuestions } from '../services/api'
 
 export default function TestsPage() {
-  const { user, isAdmin, isViewingAsAdmin } = useAuth()
+  const { isAdmin, isViewingAsAdmin } = useAuth()
+  const { theme } = useTheme()
   const location = useLocation()
   const navigate = useNavigate()
   const [tests, setTests] = useState<CustomTest[]>([])
@@ -14,6 +16,8 @@ export default function TestsPage() {
   const [showResults, setShowResults] = useState(false)
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('Все')
+
+  const isDark = theme === 'dark'
 
   const RIASEC_CATEGORIES: { label: string; description: string }[] = [
     {
@@ -122,7 +126,6 @@ export default function TestsPage() {
   const categories = useMemo(() => {
     const unique = new Set<string>()
     tests.forEach((t) => unique.add(t.category || 'Общее'))
-    // Добавляем предустановленные RIASEC категории
     RIASEC_CATEGORIES.forEach((c) => unique.add(c.label))
     return ['Все', ...Array.from(unique)]
   }, [tests])
@@ -138,25 +141,25 @@ export default function TestsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-900' : 'bg-gray-50'}`}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+    <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-gray-50'}`}>
+      <header className={`shadow-sm ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                 CM
               </div>
-              <span className="font-semibold text-gray-900">CareerMatch</span>
+              <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>CareerMatch</span>
             </Link>
-            <span className="text-gray-400">|</span>
-            <span className="text-gray-600 font-medium">Тесты</span>
+            <span className={isDark ? 'text-slate-600' : 'text-gray-400'}>|</span>
+            <span className={`font-medium ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Тесты</span>
           </div>
           <div className="flex items-center gap-4">
             {isAdmin && isViewingAsAdmin && (
@@ -164,7 +167,7 @@ export default function TestsPage() {
                 Панель админа
               </Link>
             )}
-            <Link to="/" className="text-gray-600 hover:text-gray-900">
+            <Link to="/" className={isDark ? 'text-slate-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}>
               На главную
             </Link>
           </div>
@@ -175,7 +178,7 @@ export default function TestsPage() {
         {!selectedTest && (
           <>
             <div className="flex items-center justify-between mb-6 gap-3">
-              <h1 className="text-3xl font-bold text-gray-900">Доступные тесты</h1>
+              <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Доступные тесты</h1>
               <select
                 value={selectedCategory}
                 onChange={(e) => {
@@ -183,7 +186,9 @@ export default function TestsPage() {
                   const val = e.target.value
                   navigate(val === 'Все' ? '/tests' : `/tests?category=${encodeURIComponent(val)}`)
                 }}
-                className="px-3 py-2 border rounded-lg"
+                className={`px-3 py-2 border rounded-lg ${
+                  isDark ? 'bg-slate-800 border-slate-600 text-slate-200' : 'bg-white border-gray-300 text-gray-700'
+                }`}
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -194,19 +199,19 @@ export default function TestsPage() {
             </div>
             
             {tests.length === 0 ? (
-              <div className="bg-white rounded-xl p-8 text-center text-gray-500">
+              <div className={`rounded-xl p-8 text-center ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-white text-gray-500'}`}>
                 Пока нет доступных тестов
               </div>
             ) : (
               <div className="grid gap-4">
                 {filteredTests.map(test => (
-                  <div key={test.id} className="bg-white rounded-xl shadow-sm p-6">
+                  <div key={test.id} className={`rounded-xl shadow-sm p-6 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
                     <div className="flex justify-between items-start gap-3">
                       <div>
-                        <h3 className="font-semibold text-gray-900 text-lg">{test.title}</h3>
-                        {test.description && <p className="text-gray-600 mt-2">{test.description}</p>}
+                        <h3 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>{test.title}</h3>
+                        {test.description && <p className={`mt-2 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{test.description}</p>}
                       </div>
-                      <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700">
+                      <span className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-blue-900 text-blue-300' : 'bg-blue-50 text-blue-700'}`}>
                         {test.category || 'Общее'}
                       </span>
                     </div>
@@ -222,9 +227,9 @@ export default function TestsPage() {
             )}
 
             {selectedCategory !== 'Все' && (
-              <div className="mt-6 bg-white rounded-xl shadow-sm p-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Описание категории</h3>
-                <p className="text-gray-700">
+              <div className={`mt-6 rounded-xl shadow-sm p-4 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+                <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Описание категории</h3>
+                <p className={isDark ? 'text-slate-300' : 'text-gray-700'}>
                   {RIASEC_CATEGORIES.find((c) => c.label === selectedCategory)?.description || 'Подкатегория тестов.'}
                 </p>
               </div>
@@ -233,15 +238,15 @@ export default function TestsPage() {
         )}
 
         {selectedTest && !showResults && (
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className={`rounded-xl shadow-sm p-6 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">{selectedTest.test.title}</h2>
-              <span className="text-gray-500">
+              <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{selectedTest.test.title}</h2>
+              <span className={isDark ? 'text-slate-400' : 'text-gray-500'}>
                 Вопрос {currentQuestion + 1} из {selectedTest.questions.length}
               </span>
             </div>
 
-            <div className="mb-4 bg-gray-100 rounded-full h-2">
+            <div className={`mb-4 rounded-full h-2 ${isDark ? 'bg-slate-700' : 'bg-gray-100'}`}>
               <div
                 className="bg-blue-600 h-2 rounded-full transition-all"
                 style={{ width: `${((currentQuestion + 1) / selectedTest.questions.length) * 100}%` }}
@@ -249,7 +254,7 @@ export default function TestsPage() {
             </div>
 
             <div className="py-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <h3 className={`text-lg font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 {selectedTest.questions[currentQuestion].text}
               </h3>
               <div className="space-y-3">
@@ -260,7 +265,9 @@ export default function TestsPage() {
                     className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${
                       answers[currentQuestion] === index
                         ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        : isDark 
+                          ? 'border-slate-600 hover:border-slate-500 text-slate-200' 
+                          : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     {option}
@@ -273,14 +280,16 @@ export default function TestsPage() {
               <button
                 onClick={prevQuestion}
                 disabled={currentQuestion === 0}
-                className="px-4 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isDark ? 'text-slate-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                }`}
               >
                 Назад
               </button>
               <div className="flex gap-2">
                 <button
                   onClick={resetTest}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-900"
+                  className={isDark ? 'px-4 py-2 text-slate-300 hover:text-white' : 'px-4 py-2 text-gray-600 hover:text-gray-900'}
                 >
                   Выйти
                 </button>
@@ -307,23 +316,27 @@ export default function TestsPage() {
         )}
 
         {showResults && selectedTest && (
-          <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Результаты теста</h2>
-            <p className="text-xl text-gray-700 mb-2">{selectedTest.test.title}</p>
+          <div className={`rounded-xl shadow-sm p-6 text-center ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+            <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Результаты теста</h2>
+            <p className={`text-xl mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{selectedTest.test.title}</p>
             
             <div className="my-8">
               <div className="text-6xl font-bold text-blue-600 mb-2">
                 {calculateScore().percentage}%
               </div>
-              <p className="text-gray-600">
+              <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>
                 Правильных ответов: {calculateScore().correct} из {calculateScore().total}
               </p>
             </div>
 
             <div className="space-y-4 text-left mb-8">
               {selectedTest.questions.map((q, i) => (
-                <div key={q.id} className={`p-4 rounded-lg ${answers[i] === q.correctOptionIndex ? 'bg-green-50' : 'bg-red-50'}`}>
-                  <p className="font-medium text-gray-900 mb-2">{q.text}</p>
+                <div key={q.id} className={`p-4 rounded-lg ${
+                  answers[i] === q.correctOptionIndex 
+                    ? isDark ? 'bg-green-900/30' : 'bg-green-50' 
+                    : isDark ? 'bg-red-900/30' : 'bg-red-50'
+                }`}>
+                  <p className={`font-medium mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{q.text}</p>
                   <p className={`text-sm ${answers[i] === q.correctOptionIndex ? 'text-green-600' : 'text-red-600'}`}>
                     Ваш ответ: {q.options[answers[i]]}
                   </p>
@@ -337,16 +350,18 @@ export default function TestsPage() {
             </div>
 
             {calculateScore().percentage >= 70 && (
-              <div className="mb-6 bg-green-50 border border-green-100 rounded-xl p-4 text-left">
+              <div className={`mb-6 border rounded-xl p-4 text-left ${
+                isDark ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-100'
+              }`}>
                 <h3 className="text-lg font-semibold text-green-700 mb-1">Отличный результат!</h3>
-                <p className="text-gray-700">{successText}</p>
+                <p className={isDark ? 'text-slate-300' : 'text-gray-700'}>{successText}</p>
               </div>
             )}
 
             <div className="flex justify-center gap-4">
               <button
                 onClick={resetTest}
-                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300"
+                className={`px-6 py-2 rounded-lg ${isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
               >
                 К списку тестов
               </button>

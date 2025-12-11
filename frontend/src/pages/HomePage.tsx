@@ -1,16 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { adminApi } from '../services/api'
+import { useTheme } from '../context/ThemeContext'
 
 export default function HomePage() {
   const { user, loading, logout, isAdmin, isViewingAsAdmin, toggleViewMode } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const stored = localStorage.getItem('cm_theme')
-    return stored === 'dark' ? 'dark' : 'light'
-  })
   const [profileOverride, setProfileOverride] = useState<{ name?: string; avatar?: string } | null>(null)
 
   const riasecCategories = [
@@ -48,11 +45,6 @@ export default function HomePage() {
     }
   }, [])
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('theme-dark', theme === 'dark')
-    localStorage.setItem('cm_theme', theme)
-  }, [theme])
-
   const displayName = useMemo(
     () => profileOverride?.name || user?.name || '',
     [profileOverride, user]
@@ -61,9 +53,10 @@ export default function HomePage() {
   const avatarSrc = profileOverride?.avatar
   const avatarFallback = displayName ? displayName[0]?.toUpperCase() : 'U'
 
+  const isDark = theme === 'dark'
+
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'theme-dark' : 'bg-gradient-to-br from-blue-50 to-indigo-100'}`}>
-      {/* Левое выдвижное меню */}
+    <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100'}`}>
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-20 lg:hidden"
@@ -71,22 +64,22 @@ export default function HomePage() {
         />
       )}
       <aside
-        className={`fixed z-30 inset-y-0 left-0 w-72 bg-white shadow-xl transform transition-transform duration-300 flex flex-col ${
+        className={`fixed z-30 inset-y-0 left-0 w-72 shadow-xl transform transition-transform duration-300 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        } ${isDark ? 'bg-slate-800' : 'bg-white'}`}
       >
-        <div className="px-6 py-5 border-b flex items-center justify-between">
+        <div className={`px-6 py-5 border-b flex items-center justify-between ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">CM</span>
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-900">CareerMatch</p>
-              <p className="text-xs text-gray-500">Подбор профессий</p>
+              <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>CareerMatch</p>
+              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Подбор профессий</p>
             </div>
           </div>
           <button
-            className="lg:hidden p-2 rounded-full hover:bg-gray-100"
+            className={`lg:hidden p-2 rounded-full ${isDark ? 'hover:bg-slate-700 text-slate-300' : 'hover:bg-gray-100 text-gray-600'}`}
             onClick={() => setSidebarOpen(false)}
             aria-label="Закрыть меню"
           >
@@ -100,16 +93,24 @@ export default function HomePage() {
               {item.children ? (
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-left text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-left transition-colors ${
+                    isDark 
+                      ? 'text-slate-300 hover:bg-slate-700 hover:text-white' 
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                  }`}
                   onClick={() => setTestsOpen((o) => !o)}
                 >
                   <span>{item.label}</span>
-                  <span className="text-gray-400 text-xs">{testsOpen ? '▲' : '▼'}</span>
+                  <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>{testsOpen ? '▲' : '▼'}</span>
                 </button>
               ) : (
                 <Link
                   to={item.to}
-                  className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                  className={`flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
+                    isDark 
+                      ? 'text-slate-300 hover:bg-slate-700 hover:text-white' 
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                  }`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   <span>{item.label}</span>
@@ -121,7 +122,11 @@ export default function HomePage() {
                     <Link
                       key={child.to + child.label}
                       to={child.to}
-                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-700"
+                      className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                        isDark 
+                          ? 'text-slate-400 hover:bg-slate-700 hover:text-white' 
+                          : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
+                      }`}
                       onClick={() => setSidebarOpen(false)}
                     >
                       {child.label}
@@ -132,15 +137,18 @@ export default function HomePage() {
             </div>
           ))}
         </nav>
-        <div className="px-6 py-4 border-t text-sm text-gray-500"></div>
+        <div className={`px-6 py-4 border-t text-sm ${isDark ? 'border-slate-700 text-slate-500' : 'border-gray-200 text-gray-500'}`}></div>
       </aside>
 
-      {/* Верхняя панель */}
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur shadow-sm">
+      <header className={`sticky top-0 z-10 backdrop-blur shadow-sm ${isDark ? 'bg-slate-800/80' : 'bg-white/80'}`}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
-              className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 lg:hidden"
+              className={`p-2 rounded-lg border lg:hidden ${
+                isDark 
+                  ? 'border-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-300' 
+                  : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-600'
+              }`}
               onClick={() => setSidebarOpen(true)}
               aria-label="Открыть меню"
             >
@@ -151,16 +159,20 @@ export default function HomePage() {
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">CM</span>
               </div>
-              <span className="text-xl font-bold text-gray-800">CareerMatch</span>
+              <span className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>CareerMatch</span>
             </Link>
           </div>
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50"
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg border ${
+                isDark 
+                  ? 'border-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-300' 
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
               aria-label="Переключить тему"
             >
-              {theme === 'dark' ? '🌙' : '☀️'}
+              {isDark ? '🌙' : '☀️'}
             </button>
             {loading ? (
               <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
@@ -168,7 +180,11 @@ export default function HomePage() {
               <div className="relative">
                 <button
                   onClick={() => setAccountMenuOpen((o) => !o)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                    isDark 
+                      ? 'border-slate-600 bg-slate-700 hover:bg-slate-600' 
+                      : 'border-gray-200 bg-white hover:bg-gray-50'
+                  }`}
                 >
                   <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center overflow-hidden">
                     {avatarSrc ? (
@@ -177,20 +193,26 @@ export default function HomePage() {
                       <span className="font-semibold">{avatarFallback}</span>
                     )}
                   </div>
-                  <span className="text-gray-700 font-medium hidden sm:block">{displayName || 'Аккаунт'}</span>
+                  <span className={`font-medium hidden sm:block ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{displayName || 'Аккаунт'}</span>
                 </button>
                 {accountMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-20">
+                  <div className={`absolute right-0 mt-2 w-48 border rounded-lg shadow-lg py-2 z-20 ${
+                    isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'
+                  }`}>
                     <Link
                       to="/account"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className={`block px-4 py-2 text-sm ${
+                        isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                       onClick={() => setAccountMenuOpen(false)}
                     >
                       Личный кабинет
                     </Link>
                     <Link
                       to="/settings"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className={`block px-4 py-2 text-sm ${
+                        isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                       onClick={() => setAccountMenuOpen(false)}
                     >
                       Настройки
@@ -201,7 +223,9 @@ export default function HomePage() {
                           toggleViewMode()
                           setAccountMenuOpen(false)
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        className={`w-full text-left px-4 py-2 text-sm ${
+                          isDark ? 'text-slate-300 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
                       >
                         Режим: {isViewingAsAdmin ? 'Админ' : 'Гость'}
                       </button>
@@ -211,7 +235,9 @@ export default function HomePage() {
                         logout()
                         setAccountMenuOpen(false)
                       }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                      className={`w-full text-left px-4 py-2 text-sm ${
+                        isDark ? 'text-red-400 hover:bg-slate-700' : 'text-red-600 hover:bg-gray-50'
+                      }`}
                     >
                       Выйти
                     </button>
@@ -222,7 +248,9 @@ export default function HomePage() {
               <>
                 <Link
                   to="/login"
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                  className={`px-4 py-2 transition-colors ${
+                    isDark ? 'text-slate-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'
+                  }`}
                 >
                   Войти
                 </Link>
@@ -238,13 +266,12 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Основной контент */}
       <main className="max-w-7xl mx-auto px-4 py-12 lg:pl-80">
         <div className="max-w-4xl text-center mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+          <h1 className={`text-4xl md:text-5xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Найдите свою идеальную профессию
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className={`text-xl mb-8 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
             Подберём подходящую профессию с учётом ваших навыков, интересов и личностного типа по методике Holland (RIASEC)
           </p>
 
@@ -258,41 +285,40 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 text-left">
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+            <div className={`p-6 rounded-xl shadow-md ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${isDark ? 'bg-blue-900' : 'bg-blue-100'}`}>
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">RIASEC тест</h3>
-              <p className="text-gray-600">Определяем ваш личностный тип по научной методике Holland</p>
+              <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>RIASEC тест</h3>
+              <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Определяем ваш личностный тип по научной методике Holland</p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+            <div className={`p-6 rounded-xl shadow-md ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${isDark ? 'bg-green-900' : 'bg-green-100'}`}>
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Анализ навыков</h3>
-              <p className="text-gray-600">Учитываем ваши навыки, образование и желаемый доход</p>
+              <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Анализ навыков</h3>
+              <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Учитываем ваши навыки, образование и желаемый доход</p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+            <div className={`p-6 rounded-xl shadow-md ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${isDark ? 'bg-purple-900' : 'bg-purple-100'}`}>
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Подбор профессий</h3>
-              <p className="text-gray-600">Получите рейтинг профессий с зарплатой и востребованностью</p>
+              <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Подбор профессий</h3>
+              <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Получите рейтинг профессий с зарплатой и востребованностью</p>
             </div>
           </div>
 
-          {/* Описание снизу */}
-          <div className="mt-16 bg-white rounded-xl shadow-md p-8 text-left">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">О сервисе</h2>
-            <p className="text-gray-700 leading-relaxed">
+          <div className={`mt-16 rounded-xl shadow-md p-8 text-left ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+            <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>О сервисе</h2>
+            <p className={`leading-relaxed ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
               CareerMatch помогает подобрать профессию на основе методики Holland (RIASEC), ваших навыков, образования
               и желаемых условий. Мы предлагаем персонализированный рейтинг профессий, актуальные данные о спросе и
               доходе, а также партнёрские курсы для развития. Начните с теста — результаты останутся на главной странице,
@@ -302,8 +328,8 @@ export default function HomePage() {
         </div>
       </main>
 
-      <footer className="bg-white border-t py-6">
-        <div className="max-w-7xl mx-auto px-4 text-center text-gray-500">
+      <footer className={`border-t py-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <div className={`max-w-7xl mx-auto px-4 text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
           <p>&copy; 2024 CareerMatch. Помогаем найти призвание.</p>
         </div>
       </footer>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { api, RiasecQuestion, RiasecAnswer, UserQuestionnaire } from '../services/api'
+import { useTheme } from '../context/ThemeContext'
 
 const INTERESTS = [
   'Технологии', 'Медицина', 'Творчество', 'Финансы', 'Образование',
@@ -25,6 +26,7 @@ const WORK_CONDITIONS = [
 
 export default function QuestionnairePage() {
   const navigate = useNavigate()
+  const { theme } = useTheme()
   const [step, setStep] = useState(1)
   const [questions, setQuestions] = useState<RiasecQuestion[]>([])
   const [loading, setLoading] = useState(false)
@@ -36,6 +38,8 @@ export default function QuestionnairePage() {
   const [desiredSalary, setDesiredSalary] = useState(100000)
   const [workConditions, setWorkConditions] = useState<string[]>([])
   const [riasecAnswers, setRiasecAnswers] = useState<Record<number, number>>({})
+
+  const isDark = theme === 'dark'
 
   useEffect(() => {
     api.getQuestions().then(setQuestions).catch(console.error)
@@ -103,15 +107,20 @@ export default function QuestionnairePage() {
   const canProceedStep3 = Object.keys(riasecAnswers).length === questions.length && questions.length > 0
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-slate-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100'}`}>
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="mb-4">
+          <Link to="/" className={`text-sm ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}>
+            ← На главную
+          </Link>
+        </div>
+        <div className={`rounded-2xl shadow-xl p-8 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-gray-800">Анкета</h1>
-              <span className="text-gray-500">Шаг {step} из 3</span>
+              <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Анкета</h1>
+              <span className={isDark ? 'text-slate-400' : 'text-gray-500'}>Шаг {step} из 3</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className={`w-full rounded-full h-2 ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`}>
               <div 
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${(step / 3) * 100}%` }}
@@ -122,7 +131,7 @@ export default function QuestionnairePage() {
           {step === 1 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">Выберите ваши интересы</h2>
+                <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Выберите ваши интересы</h2>
                 <div className="flex flex-wrap gap-3">
                   {INTERESTS.map(interest => (
                     <button
@@ -131,7 +140,9 @@ export default function QuestionnairePage() {
                       className={`px-4 py-2 rounded-full border-2 transition-colors ${
                         interests.includes(interest)
                           ? 'border-blue-600 bg-blue-600 text-white'
-                          : 'border-gray-300 hover:border-blue-400'
+                          : isDark 
+                            ? 'border-slate-600 text-slate-300 hover:border-blue-400' 
+                            : 'border-gray-300 hover:border-blue-400'
                       }`}
                     >
                       {interest}
@@ -141,7 +152,7 @@ export default function QuestionnairePage() {
               </div>
 
               <div>
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">Ваши навыки</h2>
+                <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Ваши навыки</h2>
                 <div className="flex gap-2 mb-3">
                   <input
                     type="text"
@@ -149,7 +160,9 @@ export default function QuestionnairePage() {
                     onChange={(e) => setSkillInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && addSkill(skillInput)}
                     placeholder="Введите навык..."
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      isDark ? 'bg-slate-700 border-slate-600 text-slate-200 placeholder-slate-400' : 'border-gray-300'
+                    }`}
                   />
                   <button
                     onClick={() => addSkill(skillInput)}
@@ -160,19 +173,21 @@ export default function QuestionnairePage() {
                 </div>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {skills.map(skill => (
-                    <span key={skill} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full flex items-center gap-2">
+                    <span key={skill} className={`px-3 py-1 rounded-full flex items-center gap-2 ${isDark ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
                       {skill}
                       <button onClick={() => removeSkill(skill)} className="text-blue-600 hover:text-blue-800">&times;</button>
                     </span>
                   ))}
                 </div>
-                <p className="text-sm text-gray-500 mb-2">Популярные навыки:</p>
+                <p className={`text-sm mb-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Популярные навыки:</p>
                 <div className="flex flex-wrap gap-2">
                   {SKILLS_SUGGESTIONS.filter(s => !skills.includes(s)).map(skill => (
                     <button
                       key={skill}
                       onClick={() => addSkill(skill)}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-full hover:border-blue-400 hover:text-blue-600"
+                      className={`px-3 py-1 text-sm border rounded-full hover:border-blue-400 hover:text-blue-600 ${
+                        isDark ? 'border-slate-600 text-slate-400' : 'border-gray-300'
+                      }`}
                     >
                       + {skill}
                     </button>
@@ -193,11 +208,13 @@ export default function QuestionnairePage() {
           {step === 2 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">Образование</h2>
+                <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Образование</h2>
                 <select
                   value={education}
                   onChange={(e) => setEducation(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                    isDark ? 'bg-slate-700 border-slate-600 text-slate-200' : 'border-gray-300'
+                  }`}
                 >
                   {EDUCATION_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -206,7 +223,7 @@ export default function QuestionnairePage() {
               </div>
 
               <div>
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
                   Желаемый доход: {desiredSalary.toLocaleString('ru-RU')} ₽/мес
                 </h2>
                 <input
@@ -218,14 +235,14 @@ export default function QuestionnairePage() {
                   onChange={(e) => setDesiredSalary(parseInt(e.target.value))}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 />
-                <div className="flex justify-between text-sm text-gray-500 mt-1">
+                <div className={`flex justify-between text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                   <span>30 000 ₽</span>
                   <span>300 000 ₽</span>
                 </div>
               </div>
 
               <div>
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">Условия работы</h2>
+                <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Условия работы</h2>
                 <div className="flex flex-wrap gap-3">
                   {WORK_CONDITIONS.map(condition => (
                     <button
@@ -234,7 +251,9 @@ export default function QuestionnairePage() {
                       className={`px-4 py-2 rounded-full border-2 transition-colors ${
                         workConditions.includes(condition)
                           ? 'border-blue-600 bg-blue-600 text-white'
-                          : 'border-gray-300 hover:border-blue-400'
+                          : isDark 
+                            ? 'border-slate-600 text-slate-300 hover:border-blue-400' 
+                            : 'border-gray-300 hover:border-blue-400'
                       }`}
                     >
                       {condition}
@@ -246,7 +265,9 @@ export default function QuestionnairePage() {
               <div className="flex gap-4">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50"
+                  className={`flex-1 py-3 border font-semibold rounded-lg ${
+                    isDark ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
                   Назад
                 </button>
@@ -263,13 +284,13 @@ export default function QuestionnairePage() {
 
           {step === 3 && (
             <div className="space-y-6">
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">Тест RIASEC</h2>
-              <p className="text-gray-600 mb-6">Оцените, насколько вы согласны с каждым утверждением (1 - не согласен, 5 - полностью согласен)</p>
+              <h2 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Тест RIASEC</h2>
+              <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Оцените, насколько вы согласны с каждым утверждением (1 - не согласен, 5 - полностью согласен)</p>
               
               <div className="space-y-6">
                 {questions.map((question, idx) => (
-                  <div key={question.id} className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-gray-800 mb-3">{idx + 1}. {question.text}</p>
+                  <div key={question.id} className={`p-4 rounded-lg ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                    <p className={`mb-3 ${isDark ? 'text-white' : 'text-gray-800'}`}>{idx + 1}. {question.text}</p>
                     <div className="flex gap-2 justify-center">
                       {[1, 2, 3, 4, 5].map(score => (
                         <button
@@ -278,7 +299,9 @@ export default function QuestionnairePage() {
                           className={`w-10 h-10 rounded-full border-2 font-semibold transition-colors ${
                             riasecAnswers[question.id] === score
                               ? 'border-blue-600 bg-blue-600 text-white'
-                              : 'border-gray-300 hover:border-blue-400'
+                              : isDark 
+                                ? 'border-slate-500 text-slate-300 hover:border-blue-400' 
+                                : 'border-gray-300 hover:border-blue-400'
                           }`}
                         >
                           {score}
@@ -292,7 +315,9 @@ export default function QuestionnairePage() {
               <div className="flex gap-4 pt-4">
                 <button
                   onClick={() => setStep(2)}
-                  className="flex-1 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50"
+                  className={`flex-1 py-3 border font-semibold rounded-lg ${
+                    isDark ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
                   Назад
                 </button>

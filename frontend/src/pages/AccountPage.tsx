@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { Link, Navigate } from 'react-router-dom'
 import { PartnerCourse } from '../services/api'
 
@@ -31,6 +32,7 @@ const PROMO_CODES: Record<string, string> = {
 
 export default function AccountPage() {
   const { user, loading } = useAuth()
+  const { theme } = useTheme()
   const [stats, setStats] = useState<SavedTestStat[]>([])
   const [favorites, setFavorites] = useState<SavedFavorites>([])
   const [promoInput, setPromoInput] = useState('')
@@ -40,6 +42,8 @@ export default function AccountPage() {
     name: user?.name || '',
     avatar: undefined
   })
+
+  const isDark = theme === 'dark'
 
   useEffect(() => {
     const storedStats = localStorage.getItem(STORAGE_KEYS.stats)
@@ -105,7 +109,7 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100'}`}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
@@ -116,18 +120,18 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <header className="bg-white shadow-sm">
+    <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100'}`}>
+      <header className={`shadow-sm ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-2">
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
                 CM
               </div>
-              <span className="font-semibold text-gray-900">CareerMatch</span>
+              <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>CareerMatch</span>
             </Link>
-            <span className="text-gray-400">/</span>
-            <span className="text-gray-700 font-medium">Личный кабинет</span>
+            <span className={isDark ? 'text-slate-500' : 'text-gray-400'}>/</span>
+            <span className={`font-medium ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Личный кабинет</span>
           </div>
           <Link to="/" className="text-blue-600 hover:text-blue-700 font-medium">
             На главную
@@ -137,21 +141,21 @@ export default function AccountPage() {
 
       <main className="max-w-7xl mx-auto px-4 py-10">
         <div className="grid lg:grid-cols-3 gap-6">
-          <section className="lg:col-span-2 bg-white rounded-2xl shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Статистика тестов</h2>
+          <section className={`lg:col-span-2 rounded-2xl shadow p-6 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+            <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Статистика тестов</h2>
             <div className="grid sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl bg-blue-50">
-                <div className="text-sm text-gray-500">Пройдено тестов</div>
+              <div className={`p-4 rounded-xl ${isDark ? 'bg-blue-900/30' : 'bg-blue-50'}`}>
+                <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Пройдено тестов</div>
                 <div className="text-3xl font-bold text-blue-700">{totalTests}</div>
               </div>
-              <div className="p-4 rounded-xl bg-green-50">
-                <div className="text-sm text-gray-500">Последний тест</div>
+              <div className={`p-4 rounded-xl ${isDark ? 'bg-green-900/30' : 'bg-green-50'}`}>
+                <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Последний тест</div>
                 <div className="text-lg font-semibold text-green-700">
                   {lastTestDate ? new Date(lastTestDate).toLocaleString('ru-RU') : '—'}
                 </div>
               </div>
-              <div className="p-4 rounded-xl bg-purple-50">
-                <div className="text-sm text-gray-500">Среднее совпадение</div>
+              <div className={`p-4 rounded-xl ${isDark ? 'bg-purple-900/30' : 'bg-purple-50'}`}>
+                <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Среднее совпадение</div>
                 <div className="text-3xl font-bold text-purple-700">
                   {stats.length
                     ? Math.round(
@@ -163,20 +167,20 @@ export default function AccountPage() {
               </div>
             </div>
             <div className="mt-6">
-              <h3 className="font-semibold text-gray-800 mb-3">История</h3>
+              <h3 className={`font-semibold mb-3 ${isDark ? 'text-slate-200' : 'text-gray-800'}`}>История</h3>
               {stats.length === 0 ? (
-                <div className="text-gray-500">Пока нет данных. Пройдите тест.</div>
+                <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>Пока нет данных. Пройдите тест.</div>
               ) : (
                 <div className="space-y-2">
                   {stats
                     .slice()
                     .reverse()
                     .map((s, idx) => (
-                      <div key={idx} className="flex justify-between items-center bg-gray-50 rounded-lg px-4 py-2">
-                        <span className="text-gray-700">
+                      <div key={idx} className={`flex justify-between items-center rounded-lg px-4 py-2 ${isDark ? 'bg-slate-700' : 'bg-gray-50'}`}>
+                        <span className={isDark ? 'text-slate-200' : 'text-gray-700'}>
                           {new Date(s.date).toLocaleString('ru-RU')}
                         </span>
-                        <span className="text-sm text-gray-500">Совпадений: {s.matchesCount}</span>
+                        <span className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Совпадений: {s.matchesCount}</span>
                       </div>
                     ))}
                 </div>
@@ -184,14 +188,16 @@ export default function AccountPage() {
             </div>
           </section>
 
-          <section className="bg-white rounded-2xl shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Промокоды</h2>
+          <section className={`rounded-2xl shadow p-6 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+            <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Промокоды</h2>
             <div className="space-y-3">
               <input
                 value={promoInput}
                 onChange={(e) => setPromoInput(e.target.value)}
                 placeholder="Введите промокод"
-                className="w-full border rounded-lg px-3 py-2"
+                className={`w-full border rounded-lg px-3 py-2 ${
+                  isDark ? 'bg-slate-700 border-slate-600 text-slate-200 placeholder-slate-400' : 'bg-white border-gray-300'
+                }`}
               />
               <button
                 onClick={handleRedeem}
@@ -202,31 +208,33 @@ export default function AccountPage() {
               {promoMessage && (
                 <div
                   className={`text-sm px-3 py-2 rounded-lg ${
-                    promoMessage.type === 'ok' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                    promoMessage.type === 'ok' 
+                      ? isDark ? 'bg-green-900/30 text-green-400' : 'bg-green-50 text-green-700' 
+                      : isDark ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-700'
                   }`}
                 >
                   {promoMessage.text}
                 </div>
               )}
-              <div className="border-t pt-3">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Доступные промокоды</h3>
-                <ul className="space-y-1 text-sm text-gray-600">
+              <div className={`border-t pt-3 ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                <h3 className={`text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Доступные промокоды</h3>
+                <ul className={`space-y-1 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
                   {Object.entries(PROMO_CODES).map(([code, benefit]) => (
                     <li key={code} className="flex justify-between">
-                      <span className="font-mono text-gray-800">{code}</span>
-                      <span className="text-gray-500">{benefit}</span>
+                      <span className={`font-mono ${isDark ? 'text-slate-200' : 'text-gray-800'}`}>{code}</span>
+                      <span className={isDark ? 'text-slate-500' : 'text-gray-500'}>{benefit}</span>
                     </li>
                   ))}
                 </ul>
               </div>
               {redeemed.length > 0 && (
-                <div className="border-t pt-3">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Активированные</h3>
-                  <ul className="space-y-1 text-sm text-gray-600">
+                <div className={`border-t pt-3 ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                  <h3 className={`text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Активированные</h3>
+                  <ul className={`space-y-1 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
                     {redeemed.map((r) => (
                       <li key={r.code} className="flex justify-between">
-                        <span className="font-mono text-gray-800">{r.code}</span>
-                        <span className="text-gray-500">{new Date(r.redeemedAt).toLocaleDateString('ru-RU')}</span>
+                        <span className={`font-mono ${isDark ? 'text-slate-200' : 'text-gray-800'}`}>{r.code}</span>
+                        <span className={isDark ? 'text-slate-500' : 'text-gray-500'}>{new Date(r.redeemedAt).toLocaleDateString('ru-RU')}</span>
                       </li>
                     ))}
                   </ul>
@@ -236,15 +244,17 @@ export default function AccountPage() {
           </section>
         </div>
 
-        <section className="mt-8 bg-white rounded-2xl shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Профиль</h2>
+        <section className={`mt-8 rounded-2xl shadow p-6 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+          <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Профиль</h2>
           <div className="grid md:grid-cols-2 gap-4 items-center">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Имя</label>
+              <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Имя</label>
               <input
                 value={profileForm.name}
                 onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
+                className={`w-full border rounded-lg px-3 py-2 ${
+                  isDark ? 'bg-slate-700 border-slate-600 text-slate-200' : 'bg-white border-gray-300'
+                }`}
                 placeholder="Ваше имя"
               />
             </div>
@@ -276,29 +286,29 @@ export default function AccountPage() {
             >
               Сохранить профиль (локально)
             </button>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
               Изменения сохраняются в этом браузере. Для синхронизации с сервером нужно добавить соответствующий API.
             </p>
           </div>
         </section>
 
-        <section className="mt-8 bg-white rounded-2xl shadow p-6">
+        <section className={`mt-8 rounded-2xl shadow p-6 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Избранные курсы</h2>
-            <span className="text-sm text-gray-500">Хранится на этом устройстве</span>
+            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Избранные курсы</h2>
+            <span className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Хранится на этом устройстве</span>
           </div>
           {favorites.length === 0 ? (
-            <div className="text-gray-500">Пока нет избранных курсов. Добавьте их из результатов подбора.</div>
+            <div className={isDark ? 'text-slate-400' : 'text-gray-500'}>Пока нет избранных курсов. Добавьте их из результатов подбора.</div>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
               {favorites.map((course) => (
-                <div key={course.id} className="border rounded-xl p-4 bg-gray-50 flex flex-col gap-3">
+                <div key={course.id} className={`border rounded-xl p-4 flex flex-col gap-3 ${isDark ? 'border-slate-700 bg-slate-700' : 'border-gray-200 bg-gray-50'}`}>
                   <div>
                     <div className="text-sm text-blue-600">{course.provider}</div>
-                    <h3 className="font-semibold text-gray-900">{course.title}</h3>
-                    {course.description && <p className="text-gray-600 text-sm mt-1">{course.description}</p>}
+                    <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{course.title}</h3>
+                    {course.description && <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{course.description}</p>}
                   </div>
-                  <div className="flex items-center justify-between text-sm text-gray-600">
+                  <div className={`flex items-center justify-between text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
                     <span>Профессия: {course.professionId}</span>
                     <a href={course.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                       Открыть
@@ -319,4 +329,3 @@ export default function AccountPage() {
     </div>
   )
 }
-
