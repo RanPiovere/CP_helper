@@ -28,6 +28,10 @@ RUN npm ci
 # Копируем весь фронтенд
 COPY frontend/ .
 
+# Устанавливаем TypeScript глобально и исправляем права
+RUN npm install -g typescript
+RUN chmod -R 755 node_modules/.bin
+
 # Аргумент для API
 ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
