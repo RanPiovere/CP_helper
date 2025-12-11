@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://cp-helper-32yt.onrender.com/api'
+
 
 const axiosAuth = axios.create({
   baseURL: API_BASE
