@@ -11,7 +11,7 @@ import java.time.Instant
 object Database:
   
   private lazy val dataSource: HikariDataSource =
-    val dbUrl = sys.env.getOrElse("DATABASE_URL", "")
+    val dbUrl = sys.env.getOrElse("DATABASE_URL", "postgresql://careermatch:v0nCq9iFG2tfjwY09fGAdrVBMGJq7nUP@dpg-d4t2vs7gi27c73d6rkig-a.oregon-postgres.render.com/careermatch_db")
     
     val config = new HikariConfig()
     
