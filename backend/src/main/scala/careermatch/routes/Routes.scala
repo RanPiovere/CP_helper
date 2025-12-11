@@ -8,6 +8,7 @@ import spray.json._
 import careermatch.models._
 import careermatch.models.JsonFormats.given
 import careermatch.services._
+import java.nio.file.{Files, Paths}
 
 object Routes:
 
@@ -65,14 +66,26 @@ object Routes:
   // -------------------
   // Статика фронтенда (SPA)
   // -------------------
-  val staticFiles: Route =
-    getFromDirectory("public") ~                     // отдаёт все статические файлы (assets, css, js)
-    pathSingleSlash(getFromFile("public/index.html")) ~ // отдаёт index.html на корне
-    get {                                             // SPA fallback для фронтенд маршрутов
-      path(Remaining) { _ =>
-        getFromFile("public/index.html")
+  private val frontendDir =
+    List("public", "frontend/dist").find(path => Files.exists(Paths.get(path)))
+
+  val staticFiles: Route = frontendDir match
+    case Some(dir) =>
+      val indexFile = Paths.get(dir, "index.html").toString
+
+      pathSingleSlash(getFromFile(indexFile)) ~      // index.html на корне
+      getFromDirectory(dir) ~                        // статика (assets, css, js)
+      get {                                          // SPA fallback для фронтенд маршрутов
+        path(Remaining) { _ =>
+          getFromFile(indexFile)
+        }
       }
-    }
+
+    case None =>
+      // Если билд фронта не найден, отдаём 404
+      pathPrefix("") {
+        complete(StatusCodes.NotFound -> "Frontend build not found")
+      }
 
   // -------------------
   // Основной маршрут

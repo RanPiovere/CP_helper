@@ -17,3 +17,16 @@ WARNING: Unmatched cancel notification for request id 21
 2025.12.11 13:18:01 WARN  no build target for: C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala
 2025.12.11 13:18:01 INFO  no build target found for C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala. Using presentation compiler with project's scala-library version: 3.3.6
 2025.12.11 13:18:06 INFO  no build target found for C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala. Using presentation compiler with project's scala-library version: 3.3.6
+2025.12.11 13:29:22 INFO  no build target found for C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala. Using presentation compiler with project's scala-library version: 3.3.6
+2025.12.11 13:31:16 INFO  no build target found for C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala. Using presentation compiler with project's scala-library version: 3.3.6
+2025.12.11 13:31:16 INFO  no build target found for C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala. Using presentation compiler with project's scala-library version: 3.3.6
+2025.12.11 13:31:16 WARN  no build target for: C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala
+дек. 11, 2025 1:31:17 PM org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 60
+2025.12.11 13:31:26 WARN  no build target for: C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala
+2025.12.11 13:43:14 INFO  no build target found for C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala. Using presentation compiler with project's scala-library version: 3.3.6
+2025.12.11 13:43:14 INFO  no build target found for C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala. Using presentation compiler with project's scala-library version: 3.3.6
+2025.12.11 13:43:14 INFO  no build target found for C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala. Using presentation compiler with project's scala-library version: 3.3.6
+2025.12.11 13:43:51 INFO  no build target found for C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala. Using presentation compiler with project's scala-library version: 3.3.6
+2025.12.11 13:44:56 INFO  no build target found for C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala. Using presentation compiler with project's scala-library version: 3.3.6
+2025.12.11 13:44:58 INFO  no build target found for C:\Users\ramaz\Downloads\CPh\backend\src\main\scala\careermatch\routes\Routes.scala. Using presentation compiler with project's scala-library version: 3.3.6

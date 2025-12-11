@@ -1,7 +1,12 @@
 import axios from 'axios'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://cp-helper-32yt.onrender.com/api'
+// Единая базовая точка API. По умолчанию /api (работает в докере/прокси и на бэкенде).
+// Убираем дублирование /api/api за счёт использования baseURL + относительных путей.
+const API_BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '')
 
+const axiosPublic = axios.create({
+  baseURL: API_BASE
+})
 
 const axiosAuth = axios.create({
   baseURL: API_BASE
@@ -155,122 +160,122 @@ export interface MessageResponse {
 
 export const api = {
   getQuestions: async (): Promise<RiasecQuestion[]> => {
-    const res = await axios.get(`${API_BASE}/questions`)
+    const res = await axiosPublic.get('/questions')
     return res.data
   },
 
   getProfessions: async (): Promise<Profession[]> => {
-    const res = await axios.get(`${API_BASE}/professions`)
+    const res = await axiosPublic.get('/professions')
     return res.data
   },
 
   matchProfessions: async (questionnaire: UserQuestionnaire): Promise<MatchResult> => {
-    const res = await axios.post(`${API_BASE}/match`, questionnaire)
+    const res = await axiosPublic.post('/match', questionnaire)
     return res.data
   },
 
   compareProfessions: async (ids: number[]): Promise<Profession[]> => {
-    const res = await axios.get(`${API_BASE}/compare?ids=${ids.join(',')}`)
+    const res = await axiosPublic.get(`/compare?ids=${ids.join(',')}`)
     return res.data
   }
 }
 
 export const authApi = {
   register: async (email: string, password: string, name: string): Promise<AuthResponse> => {
-    const res = await axios.post(`${API_BASE}/auth/register`, { email, password, name })
+    const res = await axiosPublic.post('/auth/register', { email, password, name })
     return res.data
   },
 
   login: async (email: string, password: string): Promise<AuthResponse> => {
-    const res = await axios.post(`${API_BASE}/auth/login`, { email, password })
+    const res = await axiosPublic.post('/auth/login', { email, password })
     return res.data
   },
 
   googleAuth: async (idToken: string): Promise<AuthResponse> => {
-    const res = await axios.post(`${API_BASE}/auth/google`, { idToken })
+    const res = await axiosPublic.post('/auth/google', { idToken })
     return res.data
   },
 
   verifyEmail: async (token: string): Promise<MessageResponse> => {
-    const res = await axios.post(`${API_BASE}/auth/verify-email`, { token })
+    const res = await axiosPublic.post('/auth/verify-email', { token })
     return res.data
   },
 
   resendVerification: async (email: string): Promise<MessageResponse> => {
-    const res = await axios.post(`${API_BASE}/auth/resend-verification`, { email })
+    const res = await axiosPublic.post('/auth/resend-verification', { email })
     return res.data
   },
 
   me: async (): Promise<UserResponse> => {
-    const res = await axiosAuth.get(`${API_BASE}/auth/me`)
+    const res = await axiosAuth.get('/auth/me')
     return res.data
   },
 
   toggleViewMode: async (viewAsGuest: boolean): Promise<UserResponse> => {
-    const res = await axiosAuth.post(`${API_BASE}/auth/toggle-view-mode`, { viewAsGuest })
+    const res = await axiosAuth.post('/auth/toggle-view-mode', { viewAsGuest })
     return res.data
   }
 }
 
 export const adminApi = {
   getCourses: async (): Promise<PartnerCourse[]> => {
-    const res = await axios.get(`${API_BASE}/courses`)
+    const res = await axiosPublic.get('/courses')
     return res.data
   },
 
   getCoursesByProfession: async (professionId: number): Promise<PartnerCourse[]> => {
-    const res = await axios.get(`${API_BASE}/courses/profession/${professionId}`)
+    const res = await axiosPublic.get(`/courses/profession/${professionId}`)
     return res.data
   },
 
   createCourse: async (course: CreateCourseRequest): Promise<PartnerCourse> => {
-    const res = await axiosAuth.post(`${API_BASE}/courses`, course)
+    const res = await axiosAuth.post('/courses', course)
     return res.data
   },
 
   deleteCourse: async (courseId: number): Promise<void> => {
-    await axiosAuth.delete(`${API_BASE}/courses/${courseId}`)
+    await axiosAuth.delete(`/courses/${courseId}`)
   },
 
   getNews: async (): Promise<News[]> => {
-    const res = await axios.get(`${API_BASE}/news`)
+    const res = await axiosPublic.get('/news')
     return res.data
   },
 
   createNews: async (news: CreateNewsRequest): Promise<News> => {
-    const res = await axiosAuth.post(`${API_BASE}/news`, news)
+    const res = await axiosAuth.post('/news', news)
     return res.data
   },
 
   deleteNews: async (newsId: number): Promise<void> => {
-    await axiosAuth.delete(`${API_BASE}/news/${newsId}`)
+    await axiosAuth.delete(`/news/${newsId}`)
   },
 
   getTests: async (): Promise<CustomTest[]> => {
-    const res = await axios.get(`${API_BASE}/tests`)
+    const res = await axiosPublic.get('/tests')
     return res.data
   },
 
   getTestsAdmin: async (): Promise<CustomTest[]> => {
-    const res = await axiosAuth.get(`${API_BASE}/tests/admin`)
+    const res = await axiosAuth.get('/tests/admin')
     return res.data
   },
 
   getTestById: async (testId: number): Promise<TestWithQuestions> => {
-    const res = await axios.get(`${API_BASE}/tests/${testId}`)
+    const res = await axiosPublic.get(`/tests/${testId}`)
     return res.data
   },
 
   createTest: async (test: CreateTestRequest): Promise<CustomTest> => {
-    const res = await axiosAuth.post(`${API_BASE}/tests`, test)
+    const res = await axiosAuth.post('/tests', test)
     return res.data
   },
 
   deleteTest: async (testId: number): Promise<void> => {
-    await axiosAuth.delete(`${API_BASE}/tests/${testId}`)
+    await axiosAuth.delete(`/tests/${testId}`)
   },
 
   toggleTestActive: async (testId: number, active: boolean): Promise<void> => {
-    await axiosAuth.post(`${API_BASE}/tests/${testId}/toggle?active=${active}`)
+    await axiosAuth.post(`/tests/${testId}/toggle?active=${active}`)
   }
 }
