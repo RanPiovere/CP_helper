@@ -22,10 +22,6 @@ const STORAGE_KEYS = {
   promo: 'cm_redeemed_promos',
   profile: 'cm_profile_override'
 }
-  const [profileForm, setProfileForm] = useState<{ name: string; avatar?: string }>({
-    name: user?.name || '',
-    avatar: undefined
-  })
 
 const PROMO_CODES: Record<string, string> = {
   CAREER10: 'Скидка 10% на платные консультации',
@@ -40,6 +36,10 @@ export default function AccountPage() {
   const [promoInput, setPromoInput] = useState('')
   const [redeemed, setRedeemed] = useState<RedeemedCode[]>([])
   const [promoMessage, setPromoMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [profileForm, setProfileForm] = useState<{ name: string; avatar?: string }>({
+    name: user?.name || '',
+    avatar: undefined
+  })
 
   useEffect(() => {
     const storedStats = localStorage.getItem(STORAGE_KEYS.stats)
