@@ -1,19 +1,18 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { adminApi, api, PartnerCourse, News, CustomTest, Profession, CreateCourseRequest, CreateQuestionRequest } from '../services/api'
 
 type AdminTab = 'courses' | 'news' | 'tests'
 
 export default function AdminPage() {
-  const { user, isViewingAsAdmin, toggleViewMode, isAdmin } = useAuth()
-  const navigate = useNavigate()
+  const { user, isViewingAsAdmin, toggleViewMode, isAdmin, loading } = useAuth()
   const [activeTab, setActiveTab] = useState<AdminTab>('courses')
   const [courses, setCourses] = useState<PartnerCourse[]>([])
   const [news, setNews] = useState<News[]>([])
   const [tests, setTests] = useState<CustomTest[]>([])
   const [professions, setProfessions] = useState<Profession[]>([])
-  const [loading, setLoading] = useState(true)
+  const [dataLoading, setDataLoading] = useState(true)
 
   const [showCourseForm, setShowCourseForm] = useState(false)
   const [showNewsForm, setShowNewsForm] = useState(false)
@@ -43,19 +42,13 @@ export default function AdminPage() {
   })
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login')
-      return
+    if (user && isAdmin) {
+      loadData()
     }
-    if (!isAdmin) {
-      navigate('/')
-      return
-    }
-    loadData()
-  }, [user, isAdmin, navigate])
+  }, [user, isAdmin])
 
   const loadData = async () => {
-    setLoading(true)
+    setDataLoading(true)
     try {
       const [coursesData, newsData, testsData, professionsData] = await Promise.all([
         adminApi.getCourses(),
@@ -70,7 +63,7 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Failed to load admin data:', error)
     } finally {
-      setLoading(false)
+      setDataLoading(false)
     }
   }
 
@@ -193,6 +186,14 @@ export default function AdminPage() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />
   }
 
   return (
