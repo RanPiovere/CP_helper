@@ -1,32 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { adminApi, News } from '../services/api'
+import { adminApi } from '../services/api'
 
 export default function HomePage() {
   const { user, loading, logout, isAdmin, isViewingAsAdmin, toggleViewMode } = useAuth()
-  const [news, setNews] = useState<News[]>([])
-  const [newsLoading, setNewsLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  useEffect(() => {
-    loadNews()
-  }, [])
-
-  const loadNews = async () => {
-    try {
-      const newsData = await adminApi.getNews()
-      setNews(newsData.slice(0, 3))
-    } catch (error) {
-      console.error('Failed to load news:', error)
-    } finally {
-      setNewsLoading(false)
-    }
-  }
 
   const navItems = [
     { to: '/', label: 'Главная' },
-    { to: '/questionnaire', label: 'Подбор профессий' },
+    { to: '/news', label: 'Новости' },
     { to: '/tests', label: 'Тесты' },
     ...(isAdmin ? [{ to: '/admin', label: 'Админ-панель' }] : [])
   ]
@@ -203,23 +186,6 @@ export default function HomePage() {
               <p className="text-gray-600">Получите рейтинг профессий с зарплатой и востребованностью</p>
             </div>
           </div>
-
-          {!newsLoading && news.length > 0 && (
-            <div className="mt-12 w-full max-w-3xl mx-auto">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-left">Новости</h2>
-              <div className="space-y-4">
-                {news.map(item => (
-                  <div key={item.id} className="bg-white p-6 rounded-xl shadow-md text-left">
-                    <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                    <p className="text-gray-600 mt-2 line-clamp-3">{item.content}</p>
-                    <div className="text-sm text-gray-500 mt-3">
-                      {item.authorName} • {new Date(item.createdAt).toLocaleDateString('ru-RU')}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Описание снизу */}
           <div className="mt-16 bg-white rounded-xl shadow-md p-8 text-left">
