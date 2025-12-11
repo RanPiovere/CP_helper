@@ -9,11 +9,11 @@ import careermatch.models._
 import careermatch.models.JsonFormats.given
 import careermatch.services._
 
-import java.nio.file.Paths
-
 object Routes:
 
+  // -------------------
   // API маршруты
+  // -------------------
   val apiRoutes: Route =
     pathPrefix("api") {
       concat(
@@ -62,17 +62,19 @@ object Routes:
       )
     }
 
-  // Статика фронтенда
+  // -------------------
+  // Статика фронтенда (SPA)
+  // -------------------
   val staticFiles: Route =
-    pathSingleSlash(getFromFile("frontend/dist/index.html")) ~ // index.html на /
-    getFromDirectory("frontend/dist") ~                        // остальные статические файлы (assets и т.п.)
-    // SPA fallback: любые другие GET‑пути (например /login, /tests) отдаем index.html,
-    // чтобы роутер на фронтенде обработал маршрут и не отдавался 404
-    get {
+    getFromDirectory("public") ~                     // отдаёт все статические файлы (assets, css, js)
+    pathSingleSlash(getFromFile("public/index.html")) ~ // отдаёт index.html на корне
+    get {                                             // SPA fallback для фронтенд маршрутов
       path(Remaining) { _ =>
-        getFromFile("frontend/dist/index.html")
+        getFromFile("public/index.html")
       }
     }
 
-  // Основной маршрут с API и фронтендом
+  // -------------------
+  // Основной маршрут
+  // -------------------
   val routes: Route = apiRoutes ~ staticFiles

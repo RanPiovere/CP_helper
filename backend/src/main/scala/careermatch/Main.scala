@@ -3,7 +3,6 @@ package careermatch
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Directives._
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import scala.concurrent.{ExecutionContextExecutor, Await}
 import scala.concurrent.duration.Duration
@@ -25,7 +24,7 @@ object Main:
     val host = sys.env.getOrElse("HOST", "0.0.0.0")
     val port = sys.env.getOrElse("PORT", "8080").toInt
 
-    // оборачиваем маршруты в cors()
+    // Оборачиваем маршруты в CORS
     val routeWithCors = cors() {
       Routes.routes
     }
