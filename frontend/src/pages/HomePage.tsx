@@ -1,22 +1,73 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { adminApi } from '../services/api'
+import { adminApi, CustomTest } from '../services/api'
 
 export default function HomePage() {
   const { user, loading, logout, isAdmin, isViewingAsAdmin, toggleViewMode } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const stored = localStorage.getItem('cm_theme')
+    return stored === 'dark' ? 'dark' : 'light'
+  })
+  const [profileOverride, setProfileOverride] = useState<{ name?: string; avatar?: string } | null>(null)
+
+  const [testCategories, setTestCategories] = useState<string[]>([])
 
   const navItems = [
     { to: '/', label: 'Главная' },
     { to: '/news', label: 'Новости' },
-    { to: '/tests', label: 'Тесты' },
-    ...(user ? [{ to: '/account', label: 'Личный кабинет' }] : []),
+    {
+      to: '/tests',
+      label: 'Тесты',
+      children: [
+        { to: '/tests', label: 'Все тесты' },
+        ...testCategories.map((cat) => ({ to: `/tests?category=${encodeURIComponent(cat)}`, label: cat }))
+      ]
+    },
     ...(isViewingAsAdmin ? [{ to: '/admin', label: 'Админ-панель' }] : [])
   ]
 
+  useEffect(() => {
+    const storedProfile = localStorage.getItem('cm_profile_override')
+    if (storedProfile) {
+      try {
+        setProfileOverride(JSON.parse(storedProfile))
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const loadTests = async () => {
+      try {
+        const tests: CustomTest[] = await adminApi.getTests()
+        const categories = Array.from(new Set(tests.map((t) => t.category || 'Общее')))
+        setTestCategories(categories)
+      } catch (e) {
+        console.error('Failed to load test categories', e)
+      }
+    }
+    loadTests()
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('theme-dark', theme === 'dark')
+    localStorage.setItem('cm_theme', theme)
+  }, [theme])
+
+  const displayName = useMemo(
+    () => profileOverride?.name || user?.name || '',
+    [profileOverride, user]
+  )
+
+  const avatarSrc = profileOverride?.avatar
+  const avatarFallback = displayName ? displayName[0]?.toUpperCase() : 'U'
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className={`min-h-screen ${theme === 'dark' ? 'theme-dark' : 'bg-gradient-to-br from-blue-50 to-indigo-100'}`}>
       {/* Левое выдвижное меню */}
       {sidebarOpen && (
         <div
@@ -50,14 +101,30 @@ export default function HomePage() {
         </div>
         <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-2">
           {navItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-              onClick={() => setSidebarOpen(false)}
-            >
-              {item.label}
-            </Link>
+            <div key={item.to}>
+              <Link
+                to={item.to}
+                className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <span>{item.label}</span>
+                {item.children && <span className="text-gray-400 text-xs">▼</span>}
+              </Link>
+              {item.children && (
+                <div className="ml-4 mt-1 space-y-1">
+                  {item.children.map((child) => (
+                    <Link
+                      key={child.to + child.label}
+                      to={child.to}
+                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-700"
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </nav>
         <div className="px-6 py-4 border-t text-sm text-gray-500"></div>
@@ -83,37 +150,68 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50"
+              aria-label="Переключить тему"
+            >
+              {theme === 'dark' ? '🌙' : '☀️'}
+            </button>
             {loading ? (
               <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
             ) : user ? (
-              <div className="flex items-center space-x-3">
-                {isAdmin && (
-                  <>
-                    <button
-                      onClick={toggleViewMode}
-                      className={`text-xs px-2 py-1 rounded-full ${isViewingAsAdmin ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}
-                    >
-                      {isViewingAsAdmin ? 'Админ' : 'Гость'}
-                    </button>
-                    {isViewingAsAdmin && (
-                      <Link to="/admin" className="text-blue-600 hover:text-blue-700 font-medium">
-                        Панель
-                      </Link>
-                    )}
-                  </>
-                )}
-                <span className="text-gray-700 font-medium">
-                  {user.name}
-                  {!user.emailVerified && (
-                    <span className="ml-2 text-xs text-orange-600">(не подтверждён)</span>
-                  )}
-                </span>
+              <div className="relative">
                 <button
-                  onClick={logout}
-                  className="px-3 py-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg border border-gray-200"
+                  onClick={() => setAccountMenuOpen((o) => !o)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50"
                 >
-                  Выйти
+                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center overflow-hidden">
+                    {avatarSrc ? (
+                      <img src={avatarSrc} alt="avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="font-semibold">{avatarFallback}</span>
+                    )}
+                  </div>
+                  <span className="text-gray-700 font-medium hidden sm:block">{displayName || 'Аккаунт'}</span>
                 </button>
+                {accountMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-2 z-20">
+                    <Link
+                      to="/account"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      onClick={() => setAccountMenuOpen(false)}
+                    >
+                      Личный кабинет
+                    </Link>
+                    <Link
+                      to="/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      onClick={() => setAccountMenuOpen(false)}
+                    >
+                      Настройки
+                    </Link>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          toggleViewMode()
+                          setAccountMenuOpen(false)
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Режим: {isViewingAsAdmin ? 'Админ' : 'Гость'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        logout()
+                        setAccountMenuOpen(false)
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                    >
+                      Выйти
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <>

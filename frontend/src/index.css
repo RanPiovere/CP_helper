@@ -5,3 +5,17 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
 }
+
+.theme-dark {
+  background-color: #0f172a;
+  color: #e5e7eb;
+}
+
+.theme-dark .card {
+  background-color: #111827;
+  color: #e5e7eb;
+}
+
+.theme-dark a {
+  color: #93c5fd;
+}

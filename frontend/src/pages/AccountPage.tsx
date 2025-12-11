@@ -19,8 +19,13 @@ type RedeemedCode = {
 const STORAGE_KEYS = {
   stats: 'cm_test_stats',
   favorites: 'cm_favorite_courses',
-  promo: 'cm_redeemed_promos'
+  promo: 'cm_redeemed_promos',
+  profile: 'cm_profile_override'
 }
+  const [profileForm, setProfileForm] = useState<{ name: string; avatar?: string }>({
+    name: user?.name || '',
+    avatar: undefined
+  })
 
 const PROMO_CODES: Record<string, string> = {
   CAREER10: 'Скидка 10% на платные консультации',
@@ -40,9 +45,11 @@ export default function AccountPage() {
     const storedStats = localStorage.getItem(STORAGE_KEYS.stats)
     const storedFav = localStorage.getItem(STORAGE_KEYS.favorites)
     const storedPromo = localStorage.getItem(STORAGE_KEYS.promo)
+    const storedProfile = localStorage.getItem(STORAGE_KEYS.profile)
     if (storedStats) setStats(JSON.parse(storedStats))
     if (storedFav) setFavorites(JSON.parse(storedFav))
     if (storedPromo) setRedeemed(JSON.parse(storedPromo))
+    if (storedProfile) setProfileForm((prev) => ({ ...prev, ...JSON.parse(storedProfile) }))
   }, [])
 
   const totalTests = stats.length
@@ -80,6 +87,20 @@ export default function AccountPage() {
     localStorage.setItem(STORAGE_KEYS.promo, JSON.stringify(updated))
     setPromoInput('')
     setPromoMessage({ type: 'ok', text: `Активировано: ${PROMO_CODES[code]}` })
+  }
+
+  const handleAvatarChange = (file?: File) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setProfileForm((p) => ({ ...p, avatar: reader.result as string }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleSaveProfile = () => {
+    const payload = { name: profileForm.name || user?.name || '', avatar: profileForm.avatar }
+    localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(payload))
   }
 
   if (loading) {
@@ -214,6 +235,52 @@ export default function AccountPage() {
             </div>
           </section>
         </div>
+
+        <section className="mt-8 bg-white rounded-2xl shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Профиль</h2>
+          <div className="grid md:grid-cols-2 gap-4 items-center">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Имя</label>
+              <input
+                value={profileForm.name}
+                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+                placeholder="Ваше имя"
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center overflow-hidden">
+                {profileForm.avatar ? (
+                  <img src={profileForm.avatar} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="font-bold text-lg">
+                    {(profileForm.name || user?.name || 'U').charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <label className="cursor-pointer text-blue-600 hover:underline text-sm">
+                Загрузить аватар
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleAvatarChange(e.target.files?.[0])}
+                />
+              </label>
+            </div>
+          </div>
+          <div className="mt-4">
+            <button
+              onClick={handleSaveProfile}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Сохранить профиль (локально)
+            </button>
+            <p className="text-sm text-gray-500 mt-2">
+              Изменения сохраняются в этом браузере. Для синхронизации с сервером нужно добавить соответствующий API.
+            </p>
+          </div>
+        </section>
 
         <section className="mt-8 bg-white rounded-2xl shadow p-6">
           <div className="flex items-center justify-between mb-4">

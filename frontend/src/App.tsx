@@ -10,6 +10,7 @@ import AdminPage from './pages/AdminPage'
 import TestsPage from './pages/TestsPage'
 import NewsPage from './pages/NewsPage'
 import AccountPage from './pages/AccountPage'
+import SettingsPage from './pages/SettingsPage'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/tests" element={<TestsPage />} />
             <Route path="/news" element={<NewsPage />} />
             <Route path="/account" element={<AccountPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </div>
       </Router>

@@ -1,20 +1,29 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { adminApi, CustomTest, TestWithQuestions } from '../services/api'
 
 export default function TestsPage() {
   const { user, isAdmin, isViewingAsAdmin } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [tests, setTests] = useState<CustomTest[]>([])
   const [selectedTest, setSelectedTest] = useState<TestWithQuestions | null>(null)
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<number[]>([])
   const [showResults, setShowResults] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState<string>('Все')
 
   useEffect(() => {
     loadTests()
   }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const cat = params.get('category')
+    if (cat) setSelectedCategory(cat)
+  }, [location.search])
 
   const loadTests = async () => {
     try {
@@ -83,6 +92,21 @@ export default function TestsPage() {
     setShowResults(false)
   }
 
+  const categories = useMemo(() => {
+    const unique = new Set<string>()
+    tests.forEach((t) => unique.add(t.category || 'Общее'))
+    return ['Все', ...Array.from(unique)]
+  }, [tests])
+
+  const filteredTests = useMemo(() => {
+    if (selectedCategory === 'Все') return tests
+    return tests.filter((t) => (t.category || 'Общее') === selectedCategory)
+  }, [tests, selectedCategory])
+
+  const successText =
+    selectedTest?.test.successMessage ||
+    'Отличный результат! Вы набрали высокий балл. Продолжайте в том же духе.'
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -121,7 +145,24 @@ export default function TestsPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         {!selectedTest && (
           <>
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">Доступные тесты</h1>
+            <div className="flex items-center justify-between mb-6 gap-3">
+              <h1 className="text-3xl font-bold text-gray-900">Доступные тесты</h1>
+              <select
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value)
+                  const val = e.target.value
+                  navigate(val === 'Все' ? '/tests' : `/tests?category=${encodeURIComponent(val)}`)
+                }}
+                className="px-3 py-2 border rounded-lg"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
             
             {tests.length === 0 ? (
               <div className="bg-white rounded-xl p-8 text-center text-gray-500">
@@ -129,10 +170,17 @@ export default function TestsPage() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {tests.map(test => (
+                {filteredTests.map(test => (
                   <div key={test.id} className="bg-white rounded-xl shadow-sm p-6">
-                    <h3 className="font-semibold text-gray-900 text-lg">{test.title}</h3>
-                    {test.description && <p className="text-gray-600 mt-2">{test.description}</p>}
+                    <div className="flex justify-between items-start gap-3">
+                      <div>
+                        <h3 className="font-semibold text-gray-900 text-lg">{test.title}</h3>
+                        {test.description && <p className="text-gray-600 mt-2">{test.description}</p>}
+                      </div>
+                      <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700">
+                        {test.category || 'Общее'}
+                      </span>
+                    </div>
                     <button
                       onClick={() => startTest(test.id)}
                       className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -249,6 +297,13 @@ export default function TestsPage() {
                 </div>
               ))}
             </div>
+
+            {calculateScore().percentage >= 70 && (
+              <div className="mb-6 bg-green-50 border border-green-100 rounded-xl p-4 text-left">
+                <h3 className="text-lg font-semibold text-green-700 mb-1">Отличный результат!</h3>
+                <p className="text-gray-700">{successText}</p>
+              </div>
+            )}
 
             <div className="flex justify-center gap-4">
               <button

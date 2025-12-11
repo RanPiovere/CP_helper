@@ -108,6 +108,9 @@ export interface CustomTest {
   authorId: number
   isActive: boolean
   createdAt: string
+  // Доп поля (опционально, если бэкенд поддержит)
+  category?: string
+  successMessage?: string
 }
 
 export interface CustomTestQuestion {
