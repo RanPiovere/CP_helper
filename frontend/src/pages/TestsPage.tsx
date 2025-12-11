@@ -15,6 +15,33 @@ export default function TestsPage() {
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('Все')
 
+  const RIASEC_CATEGORIES: { label: string; description: string }[] = [
+    {
+      label: 'Реалистичный (Практический)',
+      description: 'Работы с техникой, руками, в лаборатории, строительстве. Примеры: инженер, механик, врач-хирург, строитель.'
+    },
+    {
+      label: 'Исследовательский (Интеллектуальный)',
+      description: 'Анализ, наука, исследования, IT. Примеры: ученый, аналитик, программист, биолог.'
+    },
+    {
+      label: 'Артистический (Творческий)',
+      description: 'Креатив, дизайн, искусство, музыка. Примеры: дизайнер, художник, актер, музыкант.'
+    },
+    {
+      label: 'Социальный (Коммуникабельный)',
+      description: 'Помощь людям, преподавание, медицина. Примеры: педагог, психолог, медсестра, социальный работник.'
+    },
+    {
+      label: 'Предпринимательский (Лидерский)',
+      description: 'Управление, бизнес, продажи, организация. Примеры: менеджер, предприниматель, юрист.'
+    },
+    {
+      label: 'Конвенциональный (Организаторский)',
+      description: 'Работа с данными, документацией, офисные процессы. Примеры: бухгалтер, офис-менеджер, архивариус.'
+    }
+  ]
+
   useEffect(() => {
     loadTests()
   }, [])
@@ -95,6 +122,8 @@ export default function TestsPage() {
   const categories = useMemo(() => {
     const unique = new Set<string>()
     tests.forEach((t) => unique.add(t.category || 'Общее'))
+    // Добавляем предустановленные RIASEC категории
+    RIASEC_CATEGORIES.forEach((c) => unique.add(c.label))
     return ['Все', ...Array.from(unique)]
   }, [tests])
 
@@ -189,6 +218,15 @@ export default function TestsPage() {
                     </button>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {selectedCategory !== 'Все' && (
+              <div className="mt-6 bg-white rounded-xl shadow-sm p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Описание категории</h3>
+                <p className="text-gray-700">
+                  {RIASEC_CATEGORIES.find((c) => c.label === selectedCategory)?.description || 'Подкатегория тестов.'}
+                </p>
               </div>
             )}
           </>

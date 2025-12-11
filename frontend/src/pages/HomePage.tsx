@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { adminApi, CustomTest } from '../services/api'
+import { adminApi } from '../services/api'
 
 export default function HomePage() {
   const { user, loading, logout, isAdmin, isViewingAsAdmin, toggleViewMode } = useAuth()
@@ -13,7 +13,15 @@ export default function HomePage() {
   })
   const [profileOverride, setProfileOverride] = useState<{ name?: string; avatar?: string } | null>(null)
 
-  const [testCategories, setTestCategories] = useState<string[]>([])
+  const riasecCategories = [
+    'Реалистичный (Практический)',
+    'Исследовательский (Интеллектуальный)',
+    'Артистический (Творческий)',
+    'Социальный (Коммуникабельный)',
+    'Предпринимательский (Лидерский)',
+    'Конвенциональный (Организаторский)'
+  ]
+  const [testsOpen, setTestsOpen] = useState(false)
 
   const navItems = [
     { to: '/', label: 'Главная' },
@@ -23,7 +31,7 @@ export default function HomePage() {
       label: 'Тесты',
       children: [
         { to: '/tests', label: 'Все тесты' },
-        ...testCategories.map((cat) => ({ to: `/tests?category=${encodeURIComponent(cat)}`, label: cat }))
+        ...riasecCategories.map((cat) => ({ to: `/tests?category=${encodeURIComponent(cat)}`, label: cat }))
       ]
     },
     ...(isViewingAsAdmin ? [{ to: '/admin', label: 'Админ-панель' }] : [])
@@ -38,19 +46,6 @@ export default function HomePage() {
         /* ignore */
       }
     }
-  }, [])
-
-  useEffect(() => {
-    const loadTests = async () => {
-      try {
-        const tests: CustomTest[] = await adminApi.getTests()
-        const categories = Array.from(new Set(tests.map((t) => t.category || 'Общее')))
-        setTestCategories(categories)
-      } catch (e) {
-        console.error('Failed to load test categories', e)
-      }
-    }
-    loadTests()
   }, [])
 
   useEffect(() => {
@@ -102,15 +97,25 @@ export default function HomePage() {
         <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-2">
           {navItems.map((item) => (
             <div key={item.to}>
-              <Link
-                to={item.to}
-                className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <span>{item.label}</span>
-                {item.children && <span className="text-gray-400 text-xs">▼</span>}
-              </Link>
-              {item.children && (
+              {item.children ? (
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-lg text-left text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                  onClick={() => setTestsOpen((o) => !o)}
+                >
+                  <span>{item.label}</span>
+                  <span className="text-gray-400 text-xs">{testsOpen ? '▲' : '▼'}</span>
+                </button>
+              ) : (
+                <Link
+                  to={item.to}
+                  className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <span>{item.label}</span>
+                </Link>
+              )}
+              {item.children && testsOpen && (
                 <div className="ml-4 mt-1 space-y-1">
                   {item.children.map((child) => (
                     <Link
