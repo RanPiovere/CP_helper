@@ -217,10 +217,19 @@ docker-compose up --build
 
 ## Replit Setup
 
-- **Workflows**: Two workflows configured - Backend (sbt run on port 8080) and Frontend (npm run dev on port 5000)
-- **Database**: Replit PostgreSQL with auto-initialization and seeding on backend startup
-- **Environment Variables**: DATABASE_URL and JWT_SECRET are configured
-- **Deployment**: Autoscale deployment configured with SBT assembly JAR and serve for static files
+- **Workflows**: Frontend Dev Server workflow configured (npm run dev on port 5000)
+- **Backend**: Scala/sbt backend is not currently running in Replit due to lack of Scala module support. The backend requires Java + sbt + Scala 3.3.1 toolchain.
+- **Frontend**: React/Vite frontend runs on port 5000 with Vite proxy configured to forward /api requests to localhost:8080
+- **Deployment**: Static deployment configured to build frontend with `npm run build` and serve from `frontend/dist`
+
+### Backend Setup Notes
+The Scala backend requires:
+- Java/GraalVM for JVM runtime
+- sbt (Scala Build Tool) for compilation and running
+- PostgreSQL database with DATABASE_URL environment variable
+- JWT_SECRET environment variable for authentication
+
+To run the backend locally, you would need to install sbt and run `cd backend && sbt run`
 
 ## Recent Changes
 
