@@ -19,7 +19,9 @@ lazy val root = project
       "com.typesafe" % "config" % "1.4.3",
       "com.github.jwt-scala" %% "jwt-core" % "10.0.1" cross CrossVersion.for3Use2_13,
       "org.mindrot" % "jbcrypt" % "0.4",
-      "com.sun.mail" % "javax.mail" % "1.6.2"
+      "com.sun.mail" % "javax.mail" % "1.6.2",
+      // добавляем зависимость для CORS
+      "ch.megard" %% "akka-http-cors" % "1.1.3"
     ),
     
     Compile / mainClass := Some("careermatch.Main"),

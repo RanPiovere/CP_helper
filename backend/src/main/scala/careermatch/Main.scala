@@ -3,6 +3,8 @@ package careermatch
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.Directives._
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import scala.concurrent.{ExecutionContextExecutor, Await}
 import scala.concurrent.duration.Duration
 import scala.util.{Success, Failure}
@@ -13,18 +15,23 @@ object Main:
   def main(args: Array[String]): Unit =
     given system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "careermatch")
     given executionContext: ExecutionContextExecutor = system.executionContext
-    
+
     println("Initializing database...")
     Database.initializeDatabase()
     println("Seeding professions...")
     Database.seedProfessions()
     println("Database ready!")
-    
+
     val host = sys.env.getOrElse("HOST", "0.0.0.0")
     val port = sys.env.getOrElse("PORT", "8080").toInt
-    
-    val bindingFuture = Http().newServerAt(host, port).bind(Routes.routes)
-    
+
+    // оборачиваем маршруты в cors()
+    val routeWithCors = cors() {
+      Routes.routes
+    }
+
+    val bindingFuture = Http().newServerAt(host, port).bind(routeWithCors)
+
     bindingFuture.onComplete {
       case Success(binding) =>
         println(s"CareerMatch API server running at http://${binding.localAddress.getHostString}:${binding.localAddress.getPort}/")
@@ -32,5 +39,5 @@ object Main:
         println(s"Failed to bind HTTP server: ${exception.getMessage}")
         system.terminate()
     }
-    
+
     Await.result(system.whenTerminated, Duration.Inf)
