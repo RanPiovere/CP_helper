@@ -152,6 +152,25 @@ export interface CreateTestRequest {
   questions: CreateQuestionRequest[]
 }
 
+export interface BlogPost {
+  id: number
+  title: string
+  content: string
+  category: string
+  subcategory: string
+  authorId: number | null
+  authorName: string
+  createdAt: string
+}
+
+export interface CreateBlogRequest {
+  title: string
+  content: string
+  category: string
+  subcategory: string
+  authorName?: string
+}
+
 export interface AuthResponse {
   token: string
   user: UserResponse
@@ -280,5 +299,29 @@ export const adminApi = {
 
   toggleTestActive: async (testId: number, active: boolean): Promise<void> => {
     await axiosAuth.post(`/tests/${testId}/toggle?active=${active}`)
+  }
+}
+
+export const blogApi = {
+  getBlogs: async (category?: string): Promise<BlogPost[]> => {
+    const params = category ? `?category=${encodeURIComponent(category)}` : ''
+    const res = await axiosPublic.get(`/blogs${params}`)
+    return res.data
+  },
+
+  getBlogById: async (blogId: number): Promise<BlogPost> => {
+    const res = await axiosPublic.get(`/blogs/${blogId}`)
+    return res.data
+  },
+
+  createBlog: async (blog: CreateBlogRequest): Promise<BlogPost> => {
+    const token = localStorage.getItem('token')
+    const axiosInstance = token ? axiosAuth : axiosPublic
+    const res = await axiosInstance.post('/blogs', blog)
+    return res.data
+  },
+
+  deleteBlog: async (blogId: number): Promise<void> => {
+    await axiosAuth.delete(`/blogs/${blogId}`)
   }
 }

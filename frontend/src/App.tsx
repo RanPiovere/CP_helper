@@ -10,6 +10,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage'
 import AdminPage from './pages/AdminPage'
 import TestsPage from './pages/TestsPage'
 import NewsPage from './pages/NewsPage'
+import BlogsPage from './pages/BlogsPage'
 import AccountPage from './pages/AccountPage'
 import SettingsPage from './pages/SettingsPage'
 
@@ -28,6 +29,7 @@ function App() {
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/tests" element={<TestsPage />} />
             <Route path="/news" element={<NewsPage />} />
+            <Route path="/blogs" element={<BlogsPage />} />
             <Route path="/account" element={<AccountPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>

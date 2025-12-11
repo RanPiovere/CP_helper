@@ -149,6 +149,23 @@ object Database:
         )
       """)
       
+      stmt.executeUpdate("""
+        CREATE TABLE IF NOT EXISTS blog_posts (
+          id SERIAL PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          content TEXT NOT NULL,
+          category VARCHAR(100) NOT NULL,
+          subcategory VARCHAR(100) NOT NULL,
+          author_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          guest_author_name VARCHAR(255) DEFAULT 'Гость',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      """)
+      
+      stmt.executeUpdate("""
+        CREATE INDEX IF NOT EXISTS idx_blog_posts_category ON blog_posts(category)
+      """)
+      
       stmt.close()
     finally
       conn.close()
@@ -734,5 +751,107 @@ object Database:
       val updated = stmt.executeUpdate()
       stmt.close()
       updated > 0
+    finally
+      conn.close()
+
+  private def parseBlogPost(rs: ResultSet): BlogPost =
+    val authorId = rs.getInt("author_id")
+    BlogPost(
+      id = rs.getInt("id"),
+      title = rs.getString("title"),
+      content = rs.getString("content"),
+      category = rs.getString("category"),
+      subcategory = rs.getString("subcategory"),
+      authorId = if rs.wasNull() then None else Some(authorId),
+      authorName = Option(rs.getString("author_name")).getOrElse("Гость"),
+      createdAt = rs.getTimestamp("created_at").toInstant
+    )
+
+  def getAllBlogs(): List[BlogPost] =
+    val conn = getConnection()
+    try
+      val stmt = conn.createStatement()
+      val rs = stmt.executeQuery("""
+        SELECT b.*, COALESCE(u.name, b.guest_author_name) as author_name
+        FROM blog_posts b
+        LEFT JOIN users u ON b.author_id = u.id
+        ORDER BY b.created_at DESC
+      """)
+      val blogs = scala.collection.mutable.ListBuffer[BlogPost]()
+      while rs.next() do
+        blogs += parseBlogPost(rs)
+      stmt.close()
+      blogs.toList
+    finally
+      conn.close()
+
+  def getBlogsByCategory(category: String): List[BlogPost] =
+    val conn = getConnection()
+    try
+      val stmt = conn.prepareStatement("""
+        SELECT b.*, COALESCE(u.name, b.guest_author_name) as author_name
+        FROM blog_posts b
+        LEFT JOIN users u ON b.author_id = u.id
+        WHERE b.category = ?
+        ORDER BY b.created_at DESC
+      """)
+      stmt.setString(1, category)
+      val rs = stmt.executeQuery()
+      val blogs = scala.collection.mutable.ListBuffer[BlogPost]()
+      while rs.next() do
+        blogs += parseBlogPost(rs)
+      stmt.close()
+      blogs.toList
+    finally
+      conn.close()
+
+  def getBlogById(blogId: Int): Option[BlogPost] =
+    val conn = getConnection()
+    try
+      val stmt = conn.prepareStatement("""
+        SELECT b.*, COALESCE(u.name, b.guest_author_name) as author_name
+        FROM blog_posts b
+        LEFT JOIN users u ON b.author_id = u.id
+        WHERE b.id = ?
+      """)
+      stmt.setInt(1, blogId)
+      val rs = stmt.executeQuery()
+      val result = if rs.next() then Some(parseBlogPost(rs)) else None
+      stmt.close()
+      result
+    finally
+      conn.close()
+
+  def createBlog(title: String, content: String, category: String, subcategory: String, authorId: Option[Int], guestAuthorName: String): Option[BlogPost] =
+    val conn = getConnection()
+    try
+      val stmt = conn.prepareStatement(
+        """INSERT INTO blog_posts (title, content, category, subcategory, author_id, guest_author_name)
+           VALUES (?, ?, ?, ?, ?, ?)
+           RETURNING id, title, content, category, subcategory, author_id, guest_author_name as author_name, created_at"""
+      )
+      stmt.setString(1, title)
+      stmt.setString(2, content)
+      stmt.setString(3, category)
+      stmt.setString(4, subcategory)
+      authorId match
+        case Some(id) => stmt.setInt(5, id)
+        case None => stmt.setNull(5, java.sql.Types.INTEGER)
+      stmt.setString(6, guestAuthorName)
+      val rs = stmt.executeQuery()
+      val result = if rs.next() then Some(parseBlogPost(rs)) else None
+      stmt.close()
+      result
+    finally
+      conn.close()
+
+  def deleteBlog(blogId: Int): Boolean =
+    val conn = getConnection()
+    try
+      val stmt = conn.prepareStatement("DELETE FROM blog_posts WHERE id = ?")
+      stmt.setInt(1, blogId)
+      val deleted = stmt.executeUpdate()
+      stmt.close()
+      deleted > 0
     finally
       conn.close()

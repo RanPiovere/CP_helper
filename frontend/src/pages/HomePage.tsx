@@ -23,6 +23,7 @@ export default function HomePage() {
   const navItems = [
     { to: '/', label: 'Главная' },
     { to: '/news', label: 'Новости' },
+    { to: '/blogs', label: 'Блоги' },
     {
       to: '/tests',
       label: 'Тесты',

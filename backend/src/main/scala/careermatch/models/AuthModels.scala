@@ -204,6 +204,36 @@ case class TestWithQuestions(
 object TestWithQuestions:
   given RootJsonFormat[TestWithQuestions] = jsonFormat2(TestWithQuestions.apply)
 
+case class BlogPost(
+  id: Int,
+  title: String,
+  content: String,
+  category: String,
+  subcategory: String,
+  authorId: Option[Int],
+  authorName: String,
+  createdAt: Instant
+)
+
+object BlogPost:
+  given instantFormat: JsonFormat[Instant] = new JsonFormat[Instant]:
+    def write(instant: Instant): JsValue = JsString(instant.toString)
+    def read(value: JsValue): Instant = value match
+      case JsString(s) => Instant.parse(s)
+      case _ => throw DeserializationException("Expected Instant as JsString")
+  given RootJsonFormat[BlogPost] = jsonFormat8(BlogPost.apply)
+
+case class CreateBlogRequest(
+  title: String,
+  content: String,
+  category: String,
+  subcategory: String,
+  authorName: Option[String]
+)
+
+object CreateBlogRequest:
+  given RootJsonFormat[CreateBlogRequest] = jsonFormat5(CreateBlogRequest.apply)
+
 object AuthJsonFormats extends DefaultJsonProtocol:
   given RootJsonFormat[UserResponse] = UserResponse.given_RootJsonFormat_UserResponse
   given RootJsonFormat[RegisterRequest] = RegisterRequest.given_RootJsonFormat_RegisterRequest
@@ -224,3 +254,5 @@ object AuthJsonFormats extends DefaultJsonProtocol:
   given RootJsonFormat[CreateQuestionRequest] = CreateQuestionRequest.given_RootJsonFormat_CreateQuestionRequest
   given RootJsonFormat[CreateTestRequest] = CreateTestRequest.given_RootJsonFormat_CreateTestRequest
   given RootJsonFormat[TestWithQuestions] = TestWithQuestions.given_RootJsonFormat_TestWithQuestions
+  given RootJsonFormat[BlogPost] = BlogPost.given_RootJsonFormat_BlogPost
+  given RootJsonFormat[CreateBlogRequest] = CreateBlogRequest.given_RootJsonFormat_CreateBlogRequest

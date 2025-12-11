@@ -59,7 +59,8 @@ object Routes:
           }
         },
 
-        AdminRoutes.routes
+        AdminRoutes.routes,
+        BlogRoutes.routes
       )
     }
 
