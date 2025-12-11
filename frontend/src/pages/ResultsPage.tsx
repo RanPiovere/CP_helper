@@ -1,7 +1,7 @@
 import { useLocation, Link } from 'react-router-dom'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts'
-import { MatchResult, ProfessionMatch, RiasecProfile } from '../services/api'
+import { MatchResult, RiasecProfile, PartnerCourse, adminApi } from '../services/api'
 
 interface LocationState {
   result: MatchResult
@@ -24,6 +24,28 @@ export default function ResultsPage() {
   const [filterWorkType, setFilterWorkType] = useState<string>('')
   const [compareIds, setCompareIds] = useState<number[]>([])
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [coursesByProfession, setCoursesByProfession] = useState<Record<number, PartnerCourse[]>>({})
+  const [loadingCourses, setLoadingCourses] = useState<number | null>(null)
+
+  const loadCoursesForProfession = async (professionId: number) => {
+    if (coursesByProfession[professionId]) return
+    setLoadingCourses(professionId)
+    try {
+      const courses = await adminApi.getCoursesByProfession(professionId)
+      setCoursesByProfession(prev => ({ ...prev, [professionId]: courses }))
+    } catch (error) {
+      console.error('Failed to load courses:', error)
+      setCoursesByProfession(prev => ({ ...prev, [professionId]: [] }))
+    } finally {
+      setLoadingCourses(null)
+    }
+  }
+
+  useEffect(() => {
+    if (expandedId !== null) {
+      loadCoursesForProfession(expandedId)
+    }
+  }, [expandedId])
 
   if (!state?.result) {
     return (
@@ -214,6 +236,46 @@ export default function ResultsPage() {
                           <span className="ml-2 font-semibold">{match.skillsMatch.toFixed(0)}%</span>
                         </div>
                       </div>
+
+                      {loadingCourses === match.profession.id ? (
+                        <div className="mt-4 flex items-center text-gray-500">
+                          <div className="w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin mr-2"></div>
+                          Загрузка курсов...
+                        </div>
+                      ) : coursesByProfession[match.profession.id]?.length > 0 && (
+                        <div className="mt-4 pt-4 border-t">
+                          <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                            Рекомендуемые курсы:
+                          </span>
+                          <div className="mt-3 space-y-3">
+                            {coursesByProfession[match.profession.id].map(course => (
+                              <a
+                                key={course.id}
+                                href={course.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all"
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h4 className="font-semibold text-blue-800">{course.title}</h4>
+                                    <p className="text-sm text-gray-600 mt-1">{course.description}</p>
+                                    <span className="inline-block mt-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                                      {course.provider}
+                                    </span>
+                                  </div>
+                                  <svg className="w-5 h-5 text-blue-500 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                  </svg>
+                                </div>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
