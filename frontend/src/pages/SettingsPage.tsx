@@ -55,7 +55,9 @@ export default function SettingsPage() {
                   : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'
               }`}
             >
-              {isDark ? 'Светлая' : 'Тёмная'}
+              <span className="theme-toggle-icon">
+                {isDark ? 'Светлая' : 'Тёмная'}
+              </span>
             </button>
           </div>
         </div>
