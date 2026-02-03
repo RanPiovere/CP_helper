@@ -17,6 +17,17 @@ body,
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
+/* Усиленная плавная анимация при моменте переключения темы */
+.theme-switching,
+.theme-switching * {
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease,
+    transform 0.4s ease;
+}
+
+.theme-switching #root {
+  transform: scale(0.995);
+}
+
 .dark {
   color-scheme: dark;
 }

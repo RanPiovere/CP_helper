@@ -17,8 +17,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   })
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
+    const root = document.documentElement
+
+    // Добавляем класс для плавной анимации смены темы
+    root.classList.add('theme-switching')
+    root.classList.toggle('dark', theme === 'dark')
     localStorage.setItem('cm_theme', theme)
+
+    const timeout = window.setTimeout(() => {
+      root.classList.remove('theme-switching')
+    }, 400)
+
+    return () => {
+      window.clearTimeout(timeout)
+    }
   }, [theme])
 
   const setTheme = (newTheme: Theme) => {

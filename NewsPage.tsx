@@ -13,13 +13,30 @@ export default function NewsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
 
+  const riasecCategories = [
+    'Реалистичный (Практический)',
+    'Исследовательский (Интеллектуальный)',
+    'Артистический (Творческий)',
+    'Социальный (Коммуникабельный)',
+    'Предпринимательский (Лидерский)',
+    'Конвенциональный (Организаторский)'
+  ]
+  const [testsOpen, setTestsOpen] = useState(false)
+
   const isDark = theme === 'dark'
 
   const navItems = [
     { to: '/', label: 'Главная' },
     { to: '/news', label: 'Новости' },
     { to: '/blogs', label: 'Блоги' },
-    { to: '/tests', label: 'Тесты' },
+    {
+      to: '/tests',
+      label: 'Тесты',
+      children: [
+        { to: '/tests', label: 'Все тесты' },
+        ...riasecCategories.map((cat) => ({ to: `/tests?category=${encodeURIComponent(cat)}`, label: cat }))
+      ]
+    },
     ...(isViewingAsAdmin ? [{ to: '/admin', label: 'Админ-панель' }] : [])
   ]
 
@@ -75,22 +92,56 @@ export default function NewsPage() {
         </div>
         <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-2">
           {navItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
-                item.to === '/news'
-                  ? isDark
-                    ? 'bg-slate-700 text-white'
-                    : 'bg-blue-50 text-blue-700'
-                  : isDark
-                    ? 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-              }`}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span>{item.label}</span>
-            </Link>
+            <div key={item.to}>
+              {item.children ? (
+                <button
+                  type="button"
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-left transition-colors ${
+                    isDark
+                      ? 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                  }`}
+                  onClick={() => setTestsOpen((o) => !o)}
+                >
+                  <span>{item.label}</span>
+                  <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>{testsOpen ? '▲' : '▼'}</span>
+                </button>
+              ) : (
+                <Link
+                  to={item.to}
+                  className={`flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
+                    item.to === '/news'
+                      ? isDark
+                        ? 'bg-slate-700 text-white'
+                        : 'bg-blue-50 text-blue-700'
+                      : isDark
+                        ? 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                  }`}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <span>{item.label}</span>
+                </Link>
+              )}
+              {item.children && testsOpen && (
+                <div className="ml-4 mt-1 space-y-1">
+                  {item.children.map((child: { to: string; label: string }) => (
+                    <Link
+                      key={child.to + child.label}
+                      to={child.to}
+                      className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                        isDark
+                          ? 'text-slate-400 hover:bg-slate-700 hover:text-white'
+                          : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
+                      }`}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </nav>
       </aside>
